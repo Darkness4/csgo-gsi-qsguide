@@ -86,17 +86,14 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
 
 1. The needed port (300 by default) is occupied. What should i do?
 
-    Replace in csgogsi.py, line 195, col 33, the new corresponding port : 
+    Replace in csgogsi.py, '3000' which is the default port (line 195, col 33) with the new corresponding port : 
     
     ```python
-    SERVER = MyServer(('localhost', XXXREPLACEME), MyRequestHandler)
+    SERVER = MyServer(('localhost', 3000), MyRequestHandler)
     ```
     
     And in gamestate_integration_arduinotrack.cfg, line 3 : 
     ```
-    "uri" "http://127.0.0.1:XXXREPLACEME"
+    "uri" "http://127.0.0.1:3000"
     ```
-
-2. I don't understand what you've written!
-
-    Sorry for my english. French is my primary language.
+   
