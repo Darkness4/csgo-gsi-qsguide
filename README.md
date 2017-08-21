@@ -76,9 +76,9 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
     python csgogsi.py
     ```
 
-1. Enter the right COM like 'COM5'
+1. Enter the right COM like 'COM9'
     ```sh
-    Ports availables : ['COM9', 'COM10']
+    Availables ports  : ['COM9', 'COM10']
     Please enter the corresponding COMX : COM9
     ```
 1. Play some CSGO and enjoy!
