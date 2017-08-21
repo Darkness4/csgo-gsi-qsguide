@@ -97,3 +97,6 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
     "uri" "http://127.0.0.1:3000"
     ```
    
+2.  Can i gather others informations than the ones proposed?
+
+    Yes, you can. The out.txt is an example of the payload which is storing all the informations from CS:GO. For more information, you can follow this [guide](https://github.com/tsuriga/csgo-gsi-qsguide) and [the official wiki about CS:GO GSI](https://developer.valvesoftware.com/wiki/Counter-Strike:_Global_Offensive_Game_State_Integration)
