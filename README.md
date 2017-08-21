@@ -16,7 +16,7 @@ The informations are received by the program made in python and are shown on an 
 ## Table of Contents
 
 - [Requirements](#requirements)
-- [Install & Usage](#install-usage)
+- [Install & Usage](#install--usage)
 - [F.A.Q](#faq)
 
 
