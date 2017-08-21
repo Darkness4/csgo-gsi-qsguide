@@ -138,7 +138,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
 
             state = self.get_state(payload)
             if state != self.server.state:  # if the state has changed
-                self.server.state = state  # Récup des stats du joueurs
+                self.server.state = state  # Gather player's state
                 # Progress bar HP AM
                 health = int(state['health'])  # Health
                 armor = int(state['armor'])  # Armor
@@ -179,14 +179,16 @@ class MyRequestHandler(BaseHTTPRequestHandler):
         return
 
 # Arduino connection
-print("Ports availables : {}".format(serial_ports()))
-COM_STR = input("Please enter the corresponding COMX : ")  # De la forme COMX
-print("Waiting for Arduino")
 while True:
     try:
-        S = serial.Serial(COM_STR, 9600)
+        print("Availables ports: {}".format(serial_ports()))
+        COM_STR = input("Please enter the corresponding COMX: ")
+        print("Waiting for Arduino...")
+        SERIAL = serial.Serial(COM_STR, 9600)
         break
-    except IndexError:
+    except serial.SerialException:
+        print("Incorrect. Enter a string like 'COM1' without apostrophes \
+or quotation marks")
         pass
 print(time.asctime(), '-', "Arduino detected")
 time.sleep(2)    # wait for the Serial to initialize
