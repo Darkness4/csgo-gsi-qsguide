@@ -13,8 +13,8 @@ import glob
 import getinfo
 from serial import Serial, SerialException
 from qtpy.QtWidgets import (QPushButton, QApplication, QComboBox,
-                            QVBoxLayout, QDialog)
-from qtpy.QtCore import Slot, QThread
+                            QVBoxLayout, QHBoxLayout, QWidget)
+from qtpy.QtCore import Slot, QThread, Qt
 from qtpy.QtGui import QIcon
 
 
@@ -188,7 +188,7 @@ class ServerThread(QThread):
         print(time.asctime(), '-', 'Serial stopped')
 
 
-class Csgogsi(QDialog):
+class Csgogsi(QWidget):
     """App UI"""
     def __init__(self, parent=None):
         super(Csgogsi, self).__init__(parent)
@@ -209,14 +209,17 @@ class Csgogsi(QDialog):
 
         # Window
         vbox = QVBoxLayout()
+        hbox = QHBoxLayout()
         vbox.addStretch(1)
-        vbox.addWidget(self.refreshbtn)
-        vbox.addWidget(self.comcb)
+        hbox.addWidget(self.comcb)
+        hbox.addWidget(self.refreshbtn)
+        vbox.addLayout(hbox)
         vbox.addWidget(self.connectbtn)
         self.setLayout(vbox)
         self.setWindowIcon(QIcon('csgo-icon-42854-16x16.ico'))
         self.setWindowTitle('CSGO GSI on LCD')
-        self.setFixedSize(97, 100)
+        self.setFixedSize(200, 75)
+        self.setWindowFlags(Qt.WindowCloseButtonHint)
         self.show()
 
     @Slot()
@@ -246,6 +249,7 @@ class Csgogsi(QDialog):
     def stop(self):
         """Stop the server"""
         self.serverthread.server.shutdown()
+        self.serverthread.wait()
         self.serverthread.quit()
         self.connectbtn.clicked.disconnect()
         self.connectbtn.clicked.connect(self.connect)
