@@ -178,13 +178,14 @@ class MyRequestHandler(BaseHTTPRequestHandler):
         """
         return
 
+
 # Arduino connection
 while True:
     try:
         print("Availables ports: {}".format(serial_ports()))
         COM_STR = input("Please enter the corresponding COMX: ")
         print("Waiting for Arduino...")
-        SERIAL = serial.Serial(COM_STR, 9600)
+        S = serial.Serial(COM_STR, 9600)
         break
     except serial.SerialException:
         print("Incorrect. Enter a string like 'COM1' without apostrophes \
