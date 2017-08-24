@@ -11,6 +11,9 @@ import time
 import json
 import glob
 import serial
+from PyQt5.QtWidgets import (QWidget, QPushButton, QApplication, QComboBox,
+                             QVBoxLayout)
+from PyQt5.QtCore import pyqtSlot, QThread
 
 
 def progress(i):
@@ -179,33 +182,89 @@ class MyRequestHandler(BaseHTTPRequestHandler):
         return
 
 
-# Arduino connection
-while True:
-    try:
-        print("Availables ports: {}".format(serial_ports()))
-        COM_STR = input("Please enter the corresponding COMX: ")
-        print("Waiting for Arduino...")
-        S = serial.Serial(COM_STR, 9600)
-        break
-    except serial.SerialException:
-        print("Incorrect. Enter a string like 'COM1' without apostrophes \
-or quotation marks")
-        pass
-print(time.asctime(), '-', "Arduino detected")
-time.sleep(2)    # wait for the Serial to initialize
+class ServerThread(QThread):
+    def __init__(self, COM_STR):
+        QThread.__init__(self)
+        self.COM_STR = COM_STR
 
-# Server initialization
-SERVER = MyServer(('localhost', 3000), MyRequestHandler)
-SERVER.init_state()
+    def run(self):
+        global S
+        self.S = serial.Serial(self.COM_STR, 9600)
+        time.sleep(2)
+        print(time.asctime(), '-', "Arduino detected")
+        self.SERVER = MyServer(('localhost', 3000), MyRequestHandler)
+        self.SERVER.init_state()
+        print(time.asctime(), '-', 'CS:GO GSI Quick Start server starting')
+        self.SERVER.serve_forever()
+        self.SERVER.server_close()
+        self.S.close()
+        print(time.asctime(), '-', 'CS:GO GSI Quick Start server stopped')
+        print(time.asctime(), '-', 'Serial stopped')
 
-print(time.asctime(), '-', 'CS:GO GSI Quick Start server starting')
 
-try:
-    SERVER.serve_forever()
-except (KeyboardInterrupt, SystemExit):
-    pass
+class Csgogsi(QWidget):
+    def __init__(self, parent=None):
+        super(Csgogsi, self).__init__(parent)
+        # Widgets
+        self.connectbtn = QPushButton('Connect')
+        self.connectbtn.clicked.connect(self.connect)
 
-SERVER.server_close()
-print(time.asctime(), '-', 'CS:GO GSI Quick Start server stopped')
-print(time.asctime(), '-', 'Serial stopped')
-S.close()
+        self.cb = QComboBox()
+        self.cb.addItems(serial_ports())
+        if serial_ports() == []:
+            self.connectbtn.setDisabled(True)
+        else:
+            self.connectbtn.setDisabled(False)
+
+        self.refreshbtn = QPushButton('Refresh')
+        self.refreshbtn.resize(self.refreshbtn.sizeHint())
+        self.refreshbtn.clicked.connect(self.refresh)
+
+        # Window
+        vbox = QVBoxLayout()
+        vbox.addStretch(1)
+        vbox.addWidget(self.refreshbtn)
+        vbox.addWidget(self.cb)
+        vbox.addWidget(self.connectbtn)
+        self.setLayout(vbox)
+        self.setWindowTitle('CSGO GSI on LCD')
+        self.setFixedSize(97, 100)
+        self.show()
+
+    @pyqtSlot()
+    def refresh(self):
+        self.cb.clear()
+        self.cb.addItems(serial_ports())
+        if serial_ports() == []:
+            self.connectbtn.setDisabled(True)
+        else:
+            self.connectbtn.setDisabled(False)
+
+    @pyqtSlot()
+    def connect(self):
+        self.cb.setDisabled(True)
+        self.connectbtn.setDisabled(True)
+        self.refreshbtn.setDisabled(True)
+        self.server = ServerThread(str(self.cb.currentText()))
+        self.server.start()
+        self.connectbtn.clicked.disconnect()
+        self.connectbtn.clicked.connect(self.stop)
+        self.connectbtn.setDisabled(False)
+        self.connectbtn.setText('Stop')
+
+    @pyqtSlot()
+    def stop(self):
+        self.server.SERVER.shutdown()
+        self.server.quit()
+        self.connectbtn.clicked.disconnect()
+        self.connectbtn.clicked.connect(self.connect)
+        self.connectbtn.setText('Connect')
+        self.cb.setDisabled(False)
+        self.connectbtn.setDisabled(False)
+        self.refreshbtn.setDisabled(False)
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = Csgogsi()
+    sys.exit(app.exec_())
