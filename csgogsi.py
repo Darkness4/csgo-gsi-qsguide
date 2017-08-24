@@ -10,11 +10,12 @@ import sys
 import time
 import json
 import glob
-import serial
 import getinfo
-from PyQt5.QtWidgets import (QWidget, QPushButton, QApplication, QComboBox,
-                             QVBoxLayout)
-from PyQt5.QtCore import pyqtSlot, QThread
+from serial import Serial, SerialException
+from qtpy.QtWidgets import (QPushButton, QApplication, QComboBox,
+                            QVBoxLayout, QDialog)
+from qtpy.QtCore import Slot, QThread
+from qtpy.QtGui import QIcon
 
 
 def progress(i):
@@ -73,10 +74,10 @@ def serial_ports():
     result = []
     for port in ports:
         try:
-            connect = serial.Serial(port)
+            connect = Serial(port)
             connect.close()
             result.append(port)
-        except (OSError, serial.SerialException):
+        except (OSError, SerialException):
             pass
     return result
 
@@ -173,7 +174,7 @@ class ServerThread(QThread):
 
     def run(self):
         """Start the server"""
-        self.ser_arduino = serial.Serial(self.com_str, 9600)
+        self.ser_arduino = Serial(self.com_str, 9600)
         time.sleep(2)
         print(time.asctime(), '-', "Arduino detected")
         MyRequestHandler.ser_arduino = self.ser_arduino
@@ -187,7 +188,7 @@ class ServerThread(QThread):
         print(time.asctime(), '-', 'Serial stopped')
 
 
-class Csgogsi(QWidget):
+class Csgogsi(QDialog):
     """App UI"""
     def __init__(self, parent=None):
         super(Csgogsi, self).__init__(parent)
@@ -213,11 +214,12 @@ class Csgogsi(QWidget):
         vbox.addWidget(self.comcb)
         vbox.addWidget(self.connectbtn)
         self.setLayout(vbox)
+        self.setWindowIcon(QIcon('csgo-icon-42854-16x16.ico'))
         self.setWindowTitle('CSGO GSI on LCD')
         self.setFixedSize(97, 100)
         self.show()
 
-    @pyqtSlot()
+    @Slot()
     def refresh(self):
         """Refresh COM ports"""
         self.comcb.clear()
@@ -227,7 +229,7 @@ class Csgogsi(QWidget):
         else:
             self.connectbtn.setDisabled(False)
 
-    @pyqtSlot()
+    @Slot()
     def connect(self):
         """Connect to the server"""
         self.comcb.setDisabled(True)
@@ -240,7 +242,7 @@ class Csgogsi(QWidget):
         self.connectbtn.setDisabled(False)
         self.connectbtn.setText('Stop')
 
-    @pyqtSlot()
+    @Slot()
     def stop(self):
         """Stop the server"""
         self.serverthread.server.shutdown()
