@@ -11,6 +11,7 @@ import time
 import json
 import glob
 import serial
+import getinfo
 from PyQt5.QtWidgets import (QWidget, QPushButton, QApplication, QComboBox,
                              QVBoxLayout)
 from PyQt5.QtCore import pyqtSlot, QThread
@@ -27,7 +28,7 @@ def progress(i):
     return switcher[True]
 
 
-def bombtimer():
+def bombtimer(ser_arduino):
     "40s bomb timer on arduino"
     offset = time.time()
     actualtime = 40-time.time() + offset
@@ -36,18 +37,18 @@ def bombtimer():
         time.sleep(0.1)
         actualtime = 40 - time.time() + offset
         if oldtime != int(actualtime):  # Actualization
-            S.write(b'BOMB PLANTED')
+            ser_arduino.write(b'BOMB PLANTED')
             # Wait for second line
             time.sleep(0.1)
-            S.write(progress(int(actualtime)))  # 5s max
-            S.write(progress(int(actualtime-5)))  # 10s max
-            S.write(progress(int(actualtime-10)))  # 15s max
-            S.write(progress(int(actualtime-15)))  # 20s max
-            S.write(progress(int(actualtime-20)))  # 25s max
-            S.write(progress(int(actualtime-25)))
-            S.write(progress(int(actualtime-30)))
-            S.write(progress(int(actualtime-35)))
-            S.write(bytes(str(int(actualtime)).encode()))
+            ser_arduino.write(progress(int(actualtime)))  # 5s max
+            ser_arduino.write(progress(int(actualtime-5)))  # 10s max
+            ser_arduino.write(progress(int(actualtime-10)))  # 15s max
+            ser_arduino.write(progress(int(actualtime-15)))  # 20s max
+            ser_arduino.write(progress(int(actualtime-20)))  # 25s max
+            ser_arduino.write(progress(int(actualtime-25)))
+            ser_arduino.write(progress(int(actualtime-30)))
+            ser_arduino.write(progress(int(actualtime-35)))
+            ser_arduino.write(bytes(str(int(actualtime)).encode()))
     return
 
 
@@ -94,67 +95,49 @@ class MyServer(HTTPServer):
 
 class MyRequestHandler(BaseHTTPRequestHandler):
     """CSGO's requests handler"""
+    ser_arduino = None
+
     def do_POST(self):
         """Receive CSGO's informations"""
         length = int(self.headers['Content-Length'])
         body = self.rfile.read(length).decode('utf-8')
 
-        self.parse_payload(json.loads(body))
+        self.parse_payload(json.loads(body), self.ser_arduino)
 
         self.send_header('Content-type', 'text/html')
         self.send_response(200)
         self.end_headers()
 
-    # Get Information function
-    def get_round_phase(self, payload):
-        """Get round phase"""
-        if 'round' in payload and 'phase' in payload['round']:
-            return payload['round']['phase']
-
-    def get_state(self, payload):
-        """Get player status"""
-        if 'player' in payload and 'state' in payload['player']:
-            return {'health': payload['player']['state']['health'],
-                    'armor': payload['player']['state']['armor'],
-                    'round_kills': payload['player']['state']['round_kills'],
-                    'round_killhs': payload['player']['state']['round_killhs'],
-                    'money': payload['player']['state']['money']}
-
-    def get_bomb(self, payload):
-        """Get bomb status"""
-        if 'round' in payload and 'bomb' in payload['round']:
-            return payload['round']['bomb']
-
     # Parsing and actions
-    def parse_payload(self, payload):
+    def parse_payload(self, payload, ser_arduino):
         """ Search payload and execute arduino's codes"""
-        round_phase = self.get_round_phase(payload)
+        round_phase = getinfo.get_round_phase(payload)
 
         if round_phase is not None:
-            bomb = self.get_bomb(payload)
+            bomb = getinfo.get_bomb(payload)
             if bomb == 'planted':
                 if bomb != self.server.bomb:
                     self.server.bomb = bomb
-                    bombtimer()
+                    bombtimer(ser_arduino)
             else:
                 self.server.bomb = bomb
 
-            state = self.get_state(payload)
+            state = getinfo.get_state(payload)
             if state != self.server.state:  # if the state has changed
                 self.server.state = state  # Gather player's state
                 # Progress bar HP AM
                 health = int(state['health'])  # Health
                 armor = int(state['armor'])  # Armor
-                S.write(b'H: ')  # Writing progress bar on Serial
-                S.write(progress(int(health/5)))
-                S.write(progress(int((health-25)/5)))
-                S.write(progress(int((health-50)/5)))
-                S.write(progress(int((health-75)/5)))
-                S.write(b' A: ')
-                S.write(progress(int(armor/5)))
-                S.write(progress(int((armor-25)/5)))
-                S.write(progress(int((armor-50)/5)))
-                S.write(progress(int((armor-75)/5)))
+                ser_arduino.write(b'H: ')  # Writing progress bar on Serial
+                ser_arduino.write(progress(int(health/5)))
+                ser_arduino.write(progress(int((health-25)/5)))
+                ser_arduino.write(progress(int((health-50)/5)))
+                ser_arduino.write(progress(int((health-75)/5)))
+                ser_arduino.write(b' A: ')
+                ser_arduino.write(progress(int(armor/5)))
+                ser_arduino.write(progress(int((armor-25)/5)))
+                ser_arduino.write(progress(int((armor-50)/5)))
+                ser_arduino.write(progress(int((armor-75)/5)))
                 # Wait for second line
                 time.sleep(0.1)
                 # Kill or Money
@@ -162,18 +145,18 @@ class MyRequestHandler(BaseHTTPRequestHandler):
                     # HS and Kill counter
                     headshots = int(state['round_killhs'])
                     kills = state['round_kills']-headshots
-                    S.write(b'K: ')
+                    ser_arduino.write(b'K: ')
                     for _ in range(0, kills):  # counting
-                        S.write(b'\x00')  # Byte 0 char : kill no HS
+                        ser_arduino.write(b'\x00')  # Byte 0 char : kill no HS
                     for _ in range(0, headshots):  # counting
-                        S.write(b'\x01')  # Byte 1 char : HS
+                        ser_arduino.write(b'\x01')  # Byte 1 char : HS
                 else:  # Not kill streak
-                    S.write(bytes('M: {}'.format(state['money']).encode()))
+                    ser_arduino.write(bytes('M: {}'.format(state['money']).encode()))
         elif not self.server.waiting:
             self.server.waiting = True  # isWaiting
-            S.write(b'Waiting for')
+            ser_arduino.write(b'Waiting for')
             time.sleep(0.1)
-            S.write(b'matches')
+            ser_arduino.write(b'matches')
 
     def log_message(self, format, *args):
         """
@@ -183,34 +166,37 @@ class MyRequestHandler(BaseHTTPRequestHandler):
 
 
 class ServerThread(QThread):
-    def __init__(self, COM_STR):
+    """Server's thread"""
+    def __init__(self, com_str):
         QThread.__init__(self)
-        self.COM_STR = COM_STR
+        self.com_str = com_str
 
     def run(self):
-        global S
-        self.S = serial.Serial(self.COM_STR, 9600)
+        """Start the server"""
+        self.ser_arduino = serial.Serial(self.com_str, 9600)
         time.sleep(2)
         print(time.asctime(), '-', "Arduino detected")
-        self.SERVER = MyServer(('localhost', 3000), MyRequestHandler)
-        self.SERVER.init_state()
+        MyRequestHandler.ser_arduino = self.ser_arduino
+        self.server = MyServer(('localhost', 3000), MyRequestHandler)
+        self.server.init_state()
         print(time.asctime(), '-', 'CS:GO GSI Quick Start server starting')
-        self.SERVER.serve_forever()
-        self.SERVER.server_close()
-        self.S.close()
+        self.server.serve_forever()
+        self.server.server_close()
+        self.ser_arduino.close()
         print(time.asctime(), '-', 'CS:GO GSI Quick Start server stopped')
         print(time.asctime(), '-', 'Serial stopped')
 
 
 class Csgogsi(QWidget):
+    """App UI"""
     def __init__(self, parent=None):
         super(Csgogsi, self).__init__(parent)
         # Widgets
         self.connectbtn = QPushButton('Connect')
         self.connectbtn.clicked.connect(self.connect)
 
-        self.cb = QComboBox()
-        self.cb.addItems(serial_ports())
+        self.comcb = QComboBox()
+        self.comcb.addItems(serial_ports())
         if serial_ports() == []:
             self.connectbtn.setDisabled(True)
         else:
@@ -224,7 +210,7 @@ class Csgogsi(QWidget):
         vbox = QVBoxLayout()
         vbox.addStretch(1)
         vbox.addWidget(self.refreshbtn)
-        vbox.addWidget(self.cb)
+        vbox.addWidget(self.comcb)
         vbox.addWidget(self.connectbtn)
         self.setLayout(vbox)
         self.setWindowTitle('CSGO GSI on LCD')
@@ -233,8 +219,9 @@ class Csgogsi(QWidget):
 
     @pyqtSlot()
     def refresh(self):
-        self.cb.clear()
-        self.cb.addItems(serial_ports())
+        """Refresh COM ports"""
+        self.comcb.clear()
+        self.comcb.addItems(serial_ports())
         if serial_ports() == []:
             self.connectbtn.setDisabled(True)
         else:
@@ -242,11 +229,12 @@ class Csgogsi(QWidget):
 
     @pyqtSlot()
     def connect(self):
-        self.cb.setDisabled(True)
+        """Connect to the server"""
+        self.comcb.setDisabled(True)
         self.connectbtn.setDisabled(True)
         self.refreshbtn.setDisabled(True)
-        self.server = ServerThread(str(self.cb.currentText()))
-        self.server.start()
+        self.serverthread = ServerThread(str(self.comcb.currentText()))
+        self.serverthread.start()
         self.connectbtn.clicked.disconnect()
         self.connectbtn.clicked.connect(self.stop)
         self.connectbtn.setDisabled(False)
@@ -254,17 +242,18 @@ class Csgogsi(QWidget):
 
     @pyqtSlot()
     def stop(self):
-        self.server.SERVER.shutdown()
-        self.server.quit()
+        """Stop the server"""
+        self.serverthread.server.shutdown()
+        self.serverthread.quit()
         self.connectbtn.clicked.disconnect()
         self.connectbtn.clicked.connect(self.connect)
         self.connectbtn.setText('Connect')
-        self.cb.setDisabled(False)
+        self.comcb.setDisabled(False)
         self.connectbtn.setDisabled(False)
         self.refreshbtn.setDisabled(False)
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = Csgogsi()
-    sys.exit(app.exec_())
+    APP = QApplication(sys.argv)
+    EX = Csgogsi()
+    sys.exit(APP.exec_())
