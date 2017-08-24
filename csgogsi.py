@@ -6,10 +6,10 @@ CSGO's informations displayed on an Arduino featuring a bomb timer.
 """
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import sys
-import time
-import json
-import glob
+from sys import exit, argv, platform
+from time import time, sleep, asctime
+from json import loads
+from glob import glob
 import getinfo
 from serial import Serial, SerialException
 from qtpy.QtWidgets import (QPushButton, QApplication, QComboBox,
@@ -31,16 +31,16 @@ def progress(i):
 
 def bombtimer(ser_arduino):
     "40s bomb timer on arduino"
-    offset = time.time()
-    actualtime = 40-time.time() + offset
+    offset = time()
+    actualtime = 40-time() + offset
     while actualtime > 0:
         oldtime = int(actualtime)
-        time.sleep(0.1)
-        actualtime = 40 - time.time() + offset
+        sleep(0.1)
+        actualtime = 40 - time() + offset
         if oldtime != int(actualtime):  # Actualization
             ser_arduino.write(b'BOMB PLANTED')
             # Wait for second line
-            time.sleep(0.1)
+            sleep(0.1)
             ser_arduino.write(progress(int(actualtime)))  # 5s max
             ser_arduino.write(progress(int(actualtime-5)))  # 10s max
             ser_arduino.write(progress(int(actualtime-10)))  # 15s max
@@ -61,13 +61,13 @@ def serial_ports():
         :returns:
             A list of the serial ports available on the system
     """
-    if sys.platform.startswith('win'):
+    if platform.startswith('win'):
         ports = ['COM%s' % (i + 1) for i in range(256)]
-    elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+    elif platform.startswith('linux') or platform.startswith('cygwin'):
         # this excludes your current terminal "/dev/tty"
-        ports = glob.glob('/dev/tty[A-Za-z]*')
-    elif sys.platform.startswith('darwin'):
-        ports = glob.glob('/dev/tty.*')
+        ports = glob('/dev/tty[A-Za-z]*')
+    elif platform.startswith('darwin'):
+        ports = glob('/dev/tty.*')
     else:
         raise EnvironmentError('Unsupported platform')
 
@@ -103,7 +103,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
         length = int(self.headers['Content-Length'])
         body = self.rfile.read(length).decode('utf-8')
 
-        self.parse_payload(json.loads(body), self.ser_arduino)
+        self.parse_payload(loads(body), self.ser_arduino)
 
         self.send_header('Content-type', 'text/html')
         self.send_response(200)
@@ -140,7 +140,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
                 ser_arduino.write(progress(int((armor-50)/5)))
                 ser_arduino.write(progress(int((armor-75)/5)))
                 # Wait for second line
-                time.sleep(0.1)
+                sleep(0.1)
                 # Kill or Money
                 if round_phase != 'freezetime':
                     # HS and Kill counter
@@ -156,7 +156,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
         elif not self.server.waiting:
             self.server.waiting = True  # isWaiting
             ser_arduino.write(b'Waiting for')
-            time.sleep(0.1)
+            sleep(0.1)
             ser_arduino.write(b'matches')
 
     def log_message(self, format, *args):
@@ -175,17 +175,17 @@ class ServerThread(QThread):
     def run(self):
         """Start the server"""
         self.ser_arduino = Serial(self.com_str, 9600)
-        time.sleep(2)
-        print(time.asctime(), '-', "Arduino detected")
+        sleep(2)
+        print(asctime(), '-', "Arduino detected")
         MyRequestHandler.ser_arduino = self.ser_arduino
         self.server = MyServer(('localhost', 3000), MyRequestHandler)
         self.server.init_state()
-        print(time.asctime(), '-', 'CS:GO GSI Quick Start server starting')
+        print(asctime(), '-', 'CS:GO GSI Quick Start server starting')
         self.server.serve_forever()
         self.server.server_close()
         self.ser_arduino.close()
-        print(time.asctime(), '-', 'CS:GO GSI Quick Start server stopped')
-        print(time.asctime(), '-', 'Serial stopped')
+        print(asctime(), '-', 'CS:GO GSI Quick Start server stopped')
+        print(asctime(), '-', 'Serial stopped')
 
 
 class Csgogsi(QWidget):
@@ -260,6 +260,6 @@ class Csgogsi(QWidget):
 
 
 if __name__ == '__main__':
-    APP = QApplication(sys.argv)
+    APP = QApplication(argv)
     EX = Csgogsi()
-    sys.exit(APP.exec_())
+    exit(APP.exec_())
