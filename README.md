@@ -23,11 +23,57 @@ The informations are received by the program made in python and are shown on an 
 - [Python 3.x](https://www.python.org/downloads/) (tested on 3.6)
 - pySerial package
 
-    Open a terminal :
+    Open a terminal:
 
     ```sh
-    pip --install pyserial
+    pip install pyserial
     ```
+
+    or, if anaconda installed: 
+
+    ```sh
+    conda install pyserial
+    ``` 
+
+- qtpy package
+
+    Open a terminal:
+
+    ```sh
+    pip install pyserial
+    ```
+
+    or, if anaconda installed  
+
+    ```sh
+    conda install pyserial
+    ``` 
+
+- PyQt5 or PyQt4 or PySide (tested with PyQt5)
+
+    Open a terminal:
+
+    ```sh
+    pip install PyQt5
+    ```
+
+    ```sh
+    pip install PyQt4
+    ```
+
+    ```sh
+    pip install PySide
+    ```
+
+    or, if anaconda installed  
+
+    ```sh
+    conda install pyqt
+    ``` 
+
+    ```sh
+    conda install pyside
+    ``` 
 
 - Arduino (tested on UNO rev3)
 - Arduino LCD KeyPad Shield (tested on v1.1)
@@ -62,6 +108,12 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
 
 ## Install & Usage
 
+### Using Binaries
+
+- Download and execute
+
+### Using your Python
+
 1. Clone/download this git
 
 1. Move gamestate_integration_arduinotrack.cfg in Program Files (x86)\Steam\SteamApps\common\Counter-Strike Global Offensive\csgo\cfg.
@@ -76,11 +128,8 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
     python csgogsi.py
     ```
 
-1. Enter the right COM like 'COM9'
-    ```sh
-    Availables ports  : ['COM9', 'COM10']
-    Please enter the corresponding COMX : COM9
-    ```
+1. Choose the right COM
+
 1. Play some CSGO and enjoy!
 
 ## F.A.Q
