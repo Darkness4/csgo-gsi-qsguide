@@ -29,11 +29,11 @@ The informations are received by the program made in python and are shown on an 
     pip install pyserial
     ```
 
-    or, if anaconda installed: 
+    or, if anaconda installed:
 
     ```sh
     conda install pyserial
-    ``` 
+    ```
 
 - qtpy package
 
@@ -43,11 +43,11 @@ The informations are received by the program made in python and are shown on an 
     pip install pyserial
     ```
 
-    or, if anaconda installed  
+    or, if anaconda installed:
 
     ```sh
     conda install pyserial
-    ``` 
+    ```
 
 - PyQt5 or PyQt4 or PySide (tested with PyQt5)
 
@@ -65,15 +65,15 @@ The informations are received by the program made in python and are shown on an 
     pip install PySide
     ```
 
-    or, if anaconda installed  
+    or, if anaconda installed:
 
     ```sh
     conda install pyqt
-    ``` 
+    ```
 
     ```sh
     conda install pyside
-    ``` 
+    ```
 
 - Arduino (tested on UNO rev3)
 - Arduino LCD KeyPad Shield (tested on v1.1)
