@@ -104,7 +104,8 @@ byte p5[8] = {
   0x1F,
   0x1F,
   0x1F,
-  0x1F};
+  0x1F
+};
 
 byte empty[8] = {
   0b10001,

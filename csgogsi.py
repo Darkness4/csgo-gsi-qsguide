@@ -6,7 +6,7 @@ CSGO's informations displayed on an Arduino featuring a bomb timer.
 """
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from sys import exit, argv, platform
+from sys import platform, argv
 from time import time, sleep, asctime
 from json import loads
 from glob import glob
@@ -19,7 +19,7 @@ from qtpy.QtGui import QIcon
 
 
 def progress(i):
-    """ Progress bar, for arduino 5px large"""
+    """Progress bar, for arduino 5px large."""
     switcher = {i <= 0: b"\x07",
                 i == 1: b"\x02",
                 i == 2: b"\x03",
@@ -30,9 +30,9 @@ def progress(i):
 
 
 def bombtimer(ser_arduino):
-    "40s bomb timer on arduino"
+    """40s bomb timer on arduino."""
     offset = time()
-    actualtime = 40-time() + offset
+    actualtime = 40 - time() + offset
     while actualtime > 0:
         oldtime = int(actualtime)
         sleep(0.1)
@@ -42,24 +42,24 @@ def bombtimer(ser_arduino):
             # Wait for second line
             sleep(0.1)
             ser_arduino.write(progress(int(actualtime)))  # 5s max
-            ser_arduino.write(progress(int(actualtime-5)))  # 10s max
-            ser_arduino.write(progress(int(actualtime-10)))  # 15s max
-            ser_arduino.write(progress(int(actualtime-15)))  # 20s max
-            ser_arduino.write(progress(int(actualtime-20)))  # 25s max
-            ser_arduino.write(progress(int(actualtime-25)))
-            ser_arduino.write(progress(int(actualtime-30)))
-            ser_arduino.write(progress(int(actualtime-35)))
+            ser_arduino.write(progress(int(actualtime - 5)))  # 10s max
+            ser_arduino.write(progress(int(actualtime - 10)))  # 15s max
+            ser_arduino.write(progress(int(actualtime - 15)))  # 20s max
+            ser_arduino.write(progress(int(actualtime - 20)))  # 25s max
+            ser_arduino.write(progress(int(actualtime - 25)))
+            ser_arduino.write(progress(int(actualtime - 30)))
+            ser_arduino.write(progress(int(actualtime - 35)))
             ser_arduino.write(bytes(str(int(actualtime)).encode()))
     return
 
 
 def serial_ports():
-    """ Lists serial port names
+    """List serial port names.
 
-        :raises EnvironmentError:
-            On unsupported or unknown platforms
-        :returns:
-            A list of the serial ports available on the system
+    :raises EnvironmentError:
+    On unsupported or unknown platforms
+    :returns:
+    A list of the serial ports available on the system
     """
     if platform.startswith('win'):
         ports = ['COM%s' % (i + 1) for i in range(256)]
@@ -83,11 +83,10 @@ def serial_ports():
 
 
 class MyServer(HTTPServer):
-    """Server storing CSGO's information"""
+    """Server storing CSGO's information."""
+
     def init_state(self):
-        """
-        You can store states over multiple requests in the server
-        """
+        """You can store states over multiple requests in the server."""
         self.round_phase = None
         self.bomb = None
         self.state = None
@@ -95,11 +94,12 @@ class MyServer(HTTPServer):
 
 
 class MyRequestHandler(BaseHTTPRequestHandler):
-    """CSGO's requests handler"""
+    """CSGO's requests handler."""
+
     ser_arduino = None
 
     def do_POST(self):
-        """Receive CSGO's informations"""
+        """Receive CSGO's informations."""
         length = int(self.headers['Content-Length'])
         body = self.rfile.read(length).decode('utf-8')
 
@@ -111,7 +111,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
 
     # Parsing and actions
     def parse_payload(self, payload, ser_arduino):
-        """ Search payload and execute arduino's codes"""
+        """Search payload and execute arduino's codes."""
         round_phase = getinfo.get_round_phase(payload)
 
         if round_phase is not None:
@@ -130,29 +130,30 @@ class MyRequestHandler(BaseHTTPRequestHandler):
                 health = int(state['health'])  # Health
                 armor = int(state['armor'])  # Armor
                 ser_arduino.write(b'H: ')  # Writing progress bar on Serial
-                ser_arduino.write(progress(int(health/5)))
-                ser_arduino.write(progress(int((health-25)/5)))
-                ser_arduino.write(progress(int((health-50)/5)))
-                ser_arduino.write(progress(int((health-75)/5)))
+                ser_arduino.write(progress(int(health / 5)))
+                ser_arduino.write(progress(int((health - 25) / 5)))
+                ser_arduino.write(progress(int((health - 50) / 5)))
+                ser_arduino.write(progress(int((health - 75) / 5)))
                 ser_arduino.write(b' A: ')
-                ser_arduino.write(progress(int(armor/5)))
-                ser_arduino.write(progress(int((armor-25)/5)))
-                ser_arduino.write(progress(int((armor-50)/5)))
-                ser_arduino.write(progress(int((armor-75)/5)))
+                ser_arduino.write(progress(int(armor / 5)))
+                ser_arduino.write(progress(int((armor - 25) / 5)))
+                ser_arduino.write(progress(int((armor - 50) / 5)))
+                ser_arduino.write(progress(int((armor - 75) / 5)))
                 # Wait for second line
                 sleep(0.1)
                 # Kill or Money
                 if round_phase != 'freezetime':
                     # HS and Kill counter
                     headshots = int(state['round_killhs'])
-                    kills = state['round_kills']-headshots
+                    kills = state['round_kills'] - headshots
                     ser_arduino.write(b'K: ')
                     for _ in range(0, kills):  # counting
                         ser_arduino.write(b'\x00')  # Byte 0 char : kill no HS
                     for _ in range(0, headshots):  # counting
                         ser_arduino.write(b'\x01')  # Byte 1 char : HS
                 else:  # Not kill streak
-                    ser_arduino.write(bytes('M: {}'.format(state['money']).encode()))
+                    ser_arduino.write(
+                        bytes('M: {}'.format(state['money']).encode()))
         elif not self.server.waiting:
             self.server.waiting = True  # isWaiting
             ser_arduino.write(b'Waiting for')
@@ -160,20 +161,20 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             ser_arduino.write(b'matches')
 
     def log_message(self, format, *args):
-        """
-        Prevents requests from printing into the console
-        """
+        """Prevents requests from printing into the console."""
         return
 
 
 class ServerThread(QThread):
-    """Server's thread"""
+    """Server's thread."""
+
     def __init__(self, com_str):
+        """Start thread and save the COM port."""
         QThread.__init__(self)
         self.com_str = com_str
 
     def run(self):
-        """Start the server"""
+        """Start the server."""
         self.ser_arduino = Serial(self.com_str, 9600)
         sleep(2)
         print(asctime(), '-', "Arduino detected")
@@ -189,8 +190,10 @@ class ServerThread(QThread):
 
 
 class Csgogsi(QWidget):
-    """App UI"""
+    """App UI."""
+
     def __init__(self, parent=None):
+        """Init UI."""
         super(Csgogsi, self).__init__(parent)
         # Widgets
         self.connectbtn = QPushButton('Connect')
@@ -224,7 +227,7 @@ class Csgogsi(QWidget):
 
     @Slot()
     def refresh(self):
-        """Refresh COM ports"""
+        """Refresh COM ports."""
         self.comcb.clear()
         self.comcb.addItems(serial_ports())
         if serial_ports() == []:
@@ -234,7 +237,7 @@ class Csgogsi(QWidget):
 
     @Slot()
     def connect(self):
-        """Connect to the server"""
+        """Connect to the server."""
         self.comcb.setDisabled(True)
         self.connectbtn.setDisabled(True)
         self.refreshbtn.setDisabled(True)
@@ -247,7 +250,7 @@ class Csgogsi(QWidget):
 
     @Slot()
     def stop(self):
-        """Stop the server"""
+        """Stop the server."""
         self.serverthread.server.shutdown()
         self.serverthread.wait()
         self.serverthread.quit()
@@ -260,6 +263,7 @@ class Csgogsi(QWidget):
 
 
 if __name__ == '__main__':
+    APP = None
     APP = QApplication(argv)
     EX = Csgogsi()
-    exit(APP.exec_())
+    APP.exec_()
