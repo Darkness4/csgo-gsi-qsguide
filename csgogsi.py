@@ -6,12 +6,12 @@ CSGO's informations displayed on an Arduino featuring a bomb timer.
 """
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from sys import platform, argv
+from sys import argv
 from time import time, sleep, asctime
 from json import loads
-from glob import glob
 import getinfo
-from serial import Serial, SerialException
+from serial import Serial
+from serial.tools import list_ports
 from qtpy.QtWidgets import (QPushButton, QApplication, QComboBox,
                             QVBoxLayout, QHBoxLayout, QWidget)
 from qtpy.QtCore import Slot, QThread, Qt
@@ -54,32 +54,8 @@ def bombtimer(ser_arduino):
 
 
 def serial_ports():
-    """List serial port names.
-
-    :raises EnvironmentError:
-    On unsupported or unknown platforms
-    :returns:
-    A list of the serial ports available on the system
-    """
-    if platform.startswith('win'):
-        ports = ['COM%s' % (i + 1) for i in range(256)]
-    elif platform.startswith('linux') or platform.startswith('cygwin'):
-        # this excludes your current terminal "/dev/tty"
-        ports = glob('/dev/tty[A-Za-z]*')
-    elif platform.startswith('darwin'):
-        ports = glob('/dev/tty.*')
-    else:
-        raise EnvironmentError('Unsupported platform')
-
-    result = []
-    for port in ports:
-        try:
-            connect = Serial(port)
-            connect.close()
-            result.append(port)
-        except (OSError, SerialException):
-            pass
-    return result
+    """List serial port names."""
+    return [port.device for port in list_ports.comports()]
 
 
 class MyServer(HTTPServer):
