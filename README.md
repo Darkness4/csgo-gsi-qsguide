@@ -21,6 +21,7 @@ The informations are received by the program made in python and are shown on an 
 ## Requirements
 
 - [Python 3.x](https://www.python.org/downloads/) (tested on 3.6)
+
 - pySerial package
 
     Open a terminal:
@@ -40,13 +41,13 @@ The informations are received by the program made in python and are shown on an 
     Open a terminal:
 
     ```sh
-    pip install pyserial
+    pip install qtpy
     ```
 
     or, if anaconda installed:
 
     ```sh
-    conda install pyserial
+    conda install qtpy
     ```
 
 - PyQt5 or PyQt4 or PySide (tested with PyQt5)
@@ -76,7 +77,9 @@ The informations are received by the program made in python and are shown on an 
     ```
 
 - Arduino (tested on UNO rev3)
+
 - Arduino LCD KeyPad Shield (tested on v1.1)
+
 - USB Ports
 
 ### Do not forget
@@ -110,7 +113,7 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
 
 ### Using Binaries
 
-- Download and execute
+- Download and execute csgo-gsi-arduino-lcd
 
 ### Using your Python
 
@@ -122,10 +125,30 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
 
 1. Launch CSGO
 
-1. Run the python program
+1. Install the python program
 
     ```sh
-    python csgogsi.py
+    python setup.py install
+    ```
+
+1. Run the python program (choose one and make sure you have added /Python/Scripts to Path)
+
+    Windows :
+
+    ```sh
+    csgogsilcd.bat
+    ```
+
+    Linux :
+
+    ```sh
+    csgogsilcd
+    ```
+
+    All :
+
+    ```sh
+    python csgogsilcd
     ```
 
 1. Choose the right COM
@@ -134,7 +157,7 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
 
 ## F.A.Q
 
-1. The needed port (300 by default) is occupied. What should i do?
+1. The needed port (3000 by default) is occupied. What should i do?
 
     Replace in csgogsi.py, '3000' which is the default port (line 195, col 33) with the new corresponding port :
 
