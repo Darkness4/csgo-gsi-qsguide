@@ -4,12 +4,14 @@ User interface.
 
 @auteur: Darkness4
 """
+from os.path import dirname, abspath
 from serial.tools import list_ports
 from qtpy.QtWidgets import (QPushButton, QComboBox,
                             QVBoxLayout, QHBoxLayout, QWidget)
-from qtpy.QtCore import Slot, Qt
+from qtpy.QtCore import Slot, Qt, QSize
 from qtpy.QtGui import QIcon
 from .server import ServerThread
+__dir__ = dirname(abspath(__file__))
 
 
 def serial_ports():
@@ -47,7 +49,26 @@ class Csgogsi(QWidget):
         vbox.addLayout(hbox)
         vbox.addWidget(self.connectbtn)
         self.setLayout(vbox)
-        self.setWindowIcon(QIcon('csgo-icon-42854-16x16.ico'))
+        app_icon = QIcon()
+        app_icon.addFile(
+            __dir__+"\\..\\resources\\csgo-16.ico", QSize(16, 16))
+        app_icon.addFile(
+            __dir__+"\\..\\resources\\csgo-20.ico", QSize(20, 20))
+        app_icon.addFile(
+            __dir__+"\\..\\resources\\csgo-24.ico", QSize(24, 24))
+        app_icon.addFile(
+            __dir__+"\\..\\resources\\csgo-32.ico", QSize(32, 32))
+        app_icon.addFile(
+            __dir__+"\\..\\resources\\csgo-48.ico", QSize(48, 48))
+        app_icon.addFile(
+            __dir__+"\\..\\resources\\csgo-64.ico", QSize(64, 64))
+        app_icon.addFile(
+            __dir__+"\\..\\resources\\csgo-128.ico", QSize(128, 128))
+        app_icon.addFile(
+            __dir__+"\\..\\resources\\csgo-256.ico", QSize(256, 256))
+        app_icon.addFile(
+            __dir__+"\\..\\resources\\csgo-512.ico", QSize(512, 512))
+        self.setWindowIcon(app_icon)
         self.setWindowTitle('CSGO GSI on LCD')
         self.setFixedSize(200, 75)
         self.setWindowFlags(Qt.WindowCloseButtonHint)
