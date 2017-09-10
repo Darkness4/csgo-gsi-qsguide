@@ -19,6 +19,13 @@ The informations are received by the program made in python and are shown on an 
 - [F.A.Q](#faq)
 
 ## Requirements
+- Arduino (tested on UNO rev3)
+
+- Arduino LCD KeyPad Shield (tested on v1.1)
+
+- USB Ports
+
+If you are not going to use Windows Binaries:
 
 - [Python 3.x](https://www.python.org/downloads/) (tested on 3.6)
 
@@ -76,12 +83,6 @@ The informations are received by the program made in python and are shown on an 
     conda install pyside
     ```
 
-- Arduino (tested on UNO rev3)
-
-- Arduino LCD KeyPad Shield (tested on v1.1)
-
-- USB Ports
-
 ### Do not forget
 
 Verify if the pin are the good ones on the arduino program for the LCD shield. (line 10)
@@ -111,11 +112,17 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
 
 ## Install & Usage
 
-### Using Binaries
+### Using portable binaries
 
-- Download and execute csgo-gsi-arduino-lcd
+1. Download windows/linux portable binaries
 
-### Using your Python
+1. Move gamestate_integration_arduinotrack.cfg in Program Files (x86)\Steam\SteamApps\common\Counter-Strike Global Offensive\csgo\cfg.
+
+1. Mount the shield on the arduino (obviously) and [push](https://www.arduino.cc/en/main/howto) the serialsend.ino in the arduino (remember the COM port)
+
+1. Execute csgo-gsi-arduino-lcd
+
+### Using from source
 
 1. Clone/download this git
 
@@ -123,29 +130,35 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
 
 1. Mount the shield on the arduino (obviously) and [push](https://www.arduino.cc/en/main/howto) the serialsend.ino in the arduino (remember the COM port).
 
-1. Launch CSGO
+1. Install the python program:
 
-1. Install the python program
+    ```sh
+    pip install .
+    ```
+
+  Or manually:
 
     ```sh
     python setup.py install
     ```
 
+1. Launch CSGO
+
 1. Run the python program (choose one and make sure you have added /Python/Scripts to Path)
 
-    Windows :
+    Windows:
 
     ```sh
     csgogsilcd.bat
     ```
 
-    Linux :
+    Linux:
 
     ```sh
     csgogsilcd
     ```
 
-    All :
+    All:
 
     ```sh
     python csgogsilcd
@@ -159,13 +172,13 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
 
 1. The needed port (3000 by default) is occupied. What should i do?
 
-    Replace in csgogsi.py, '3000' which is the default port (line 195, col 33) with the new corresponding port :
+    Replace in csgogsi.py, '3000' which is the default port (line 195, col 33) with the new corresponding port:
 
     ```python
     SERVER = MyServer(('localhost', 3000), MyRequestHandler)
     ```
 
-    And in gamestate_integration_arduinotrack.cfg, line 3 :
+    And in gamestate_integration_arduinotrack.cfg, line 3:
     ```cfg
     "uri" "http://127.0.0.1:3000"
     ```
