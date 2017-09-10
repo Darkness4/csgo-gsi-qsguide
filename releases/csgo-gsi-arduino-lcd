@@ -1,4 +1,4 @@
-#usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 CSGO's informations displayed on an Arduino featuring a bomb timer.
@@ -15,17 +15,16 @@ from serial.tools import list_ports
 from qtpy.QtWidgets import (QPushButton, QApplication, QComboBox,
                             QVBoxLayout, QHBoxLayout, QWidget)
 from qtpy.QtCore import Slot, QThread, Qt
-from qtpy.QtGui import QIcon
 
 
 def get_round_phase(payload):
-    """Get round phase"""
+    """Get round phase."""
     if 'round' in payload and 'phase' in payload['round']:
         return payload['round']['phase']
 
 
 def get_state(payload):
-    """Get player status"""
+    """Get player status."""
     if 'player' in payload and 'state' in payload['player']:
         return {'health': payload['player']['state']['health'],
                 'armor': payload['player']['state']['armor'],
@@ -35,7 +34,7 @@ def get_state(payload):
 
 
 def get_bomb(payload):
-    """Get bomb status"""
+    """Get bomb status."""
     if 'round' in payload and 'bomb' in payload['round']:
         return payload['round']['bomb']
 
