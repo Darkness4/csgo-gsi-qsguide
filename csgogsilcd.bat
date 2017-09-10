@@ -1,4 +1,5 @@
+@setlocal enableextensions enabledelayedexpansion
 @ECHO OFF
 FOR /f %%p in ('where python') do SET PYTHONPATH=%%p
-ECHO %PYTHONPATH%
-python.exe %PYTHONPATH%\Scripts\csgogsilcd
+set PYTHONPATH=!PYTHONPATH:~0,-10!
+python %PYTHONPATH%\Scripts\csgogsilcd
