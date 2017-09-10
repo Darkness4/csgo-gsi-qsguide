@@ -1,0 +1,5 @@
+#!/usr/bin/python
+
+from csgo_gsi_arduino_lcd import main
+
+main()

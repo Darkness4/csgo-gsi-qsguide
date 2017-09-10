@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Aug 24 19:22:07 2017
+Created on Thu Aug 24 19:22:07 2017.
 
 Get informations from a payload
 @author: Darkness4
@@ -8,13 +8,13 @@ Get informations from a payload
 
 
 def get_round_phase(payload):
-    """Get round phase"""
+    """Get round phase."""
     if 'round' in payload and 'phase' in payload['round']:
         return payload['round']['phase']
 
 
 def get_state(payload):
-    """Get player status"""
+    """Get player status."""
     if 'player' in payload and 'state' in payload['player']:
         return {'health': payload['player']['state']['health'],
                 'armor': payload['player']['state']['armor'],
@@ -24,6 +24,6 @@ def get_state(payload):
 
 
 def get_bomb(payload):
-    """Get bomb status"""
+    """Get bomb status."""
     if 'round' in payload and 'bomb' in payload['round']:
         return payload['round']['bomb']
