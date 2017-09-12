@@ -100,6 +100,9 @@ class Csgogsi(QWidget):
     @Slot()
     def stop(self):
         """Stop the server."""
+        self.serverthread.server.messenger.shutdown()
+        self.serverthread.server.messenger.wait()
+        self.serverthread.server.messenger.quit()
         self.serverthread.server.shutdown()
         self.serverthread.wait()
         self.serverthread.quit()

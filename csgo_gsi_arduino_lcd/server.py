@@ -24,9 +24,8 @@ class ServerThread(QThread):
         self.ser_arduino = Serial(self.com_str, 9600)
         sleep(2)
         print(asctime(), '-', "Arduino detected")
-        MyRequestHandler.ser_arduino = self.ser_arduino
         self.server = MyServer(('localhost', 3000), MyRequestHandler)
-        self.server.init_state()
+        self.server.init_state(self.ser_arduino)
         print(asctime(), '-', 'CS:GO GSI Quick Start server starting')
         self.server.serve_forever()
         self.server.server_close()
