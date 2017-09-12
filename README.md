@@ -126,6 +126,7 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
 
 1.  Move gamestate_integration_arduinotrack.cfg in Program Files (x86)\Steam\SteamApps\common\Counter-Strike Global Offensive\csgo\cfg.
 
+
 1.  Mount the shield on the arduino (obviously) and [push](https://www.arduino.cc/en/main/howto) the serialsend.ino in the arduino (remember the COM port)
 
 1.  Execute csgo-gsi-arduino-lcd
@@ -140,11 +141,13 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
 
 1.  Install the python program:
 
+
     ```sh
     pip install .
     ```
 
     Or manually:
+
 
     ```sh
     python setup.py install
