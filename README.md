@@ -19,6 +19,13 @@ The informations are received by the program made in python and are shown on an 
 -   [F.A.Q](#faq)
 
 ## Requirements
+-   Arduino (tested on UNO rev3)
+
+-   Arduino LCD KeyPad Shield (tested on v1.1)
+
+-   USB Ports
+
+If you are not going to use Windows Binaries:
 
 -   Arduino (tested on UNO rev3)
 
