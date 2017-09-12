@@ -19,6 +19,13 @@ The informations are received by the program made in python and are shown on an 
 -   [F.A.Q](#faq)
 
 ## Requirements
+- Arduino (tested on UNO rev3)
+
+- Arduino LCD KeyPad Shield (tested on v1.1)
+
+- USB Ports
+
+If you are not going to use Windows Binaries:
 
 -   Arduino (tested on UNO rev3)
 
@@ -114,10 +121,23 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
 ## Install & Usage
 
 ### Using portable binaries
+<<<<<<< HEAD
 
 1.  Download windows/linux portable binaries
 
 1.  Move gamestate_integration_arduinotrack.cfg in Program Files (x86)\Steam\SteamApps\common\Counter-Strike Global Offensive\csgo\cfg.
+=======
+
+1. Download windows/linux portable binaries
+
+1. Move gamestate_integration_arduinotrack.cfg in Program Files (x86)\Steam\SteamApps\common\Counter-Strike Global Offensive\csgo\cfg.
+
+1. Mount the shield on the arduino (obviously) and [push](https://www.arduino.cc/en/main/howto) the serialsend.ino in the arduino (remember the COM port)
+
+1. Execute csgo-gsi-arduino-lcd
+
+### Using from source
+>>>>>>> 23e8cb55209046c8c6ea9c19da8741b8a52a5c6b
 
 1.  Mount the shield on the arduino (obviously) and [push](https://www.arduino.cc/en/main/howto) the serialsend.ino in the arduino (remember the COM port)
 
@@ -125,6 +145,7 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
 
 ### Using from source
 
+<<<<<<< HEAD
 1.  Clone/download this git
 
 1.  Move gamestate_integration_arduinotrack.cfg in Program Files (x86)\Steam\SteamApps\common\Counter-Strike Global Offensive\csgo\cfg.
@@ -133,19 +154,33 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
 
 1.  Install the python program:
 
+=======
+1. Install the python program:
+
+>>>>>>> 23e8cb55209046c8c6ea9c19da8741b8a52a5c6b
     ```sh
     pip install .
     ```
 
+<<<<<<< HEAD
     Or manually:
+=======
+  Or manually:
+>>>>>>> 23e8cb55209046c8c6ea9c19da8741b8a52a5c6b
 
     ```sh
     python setup.py install
     ```
 
+<<<<<<< HEAD
 1.  Launch CSGO
 
 1.  Run the python program (choose one and make sure you have added /Python/Scripts to Path)
+=======
+1. Launch CSGO
+
+1. Run the python program (choose one and make sure you have added /Python/Scripts to Path)
+>>>>>>> 23e8cb55209046c8c6ea9c19da8741b8a52a5c6b
 
     Windows:
 
