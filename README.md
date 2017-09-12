@@ -27,14 +27,6 @@ The informations are received by the program made in python and are shown on an 
 
 If you are not going to use Windows Binaries:
 
--   Arduino (tested on UNO rev3)
-
--   Arduino LCD KeyPad Shield (tested on v1.1)
-
--   USB Ports
-
-If you are not going to use Windows Binaries:
-
 -   [Python 3.x](https://www.python.org/downloads/) (tested on 3.6)
 
 -   pySerial package
