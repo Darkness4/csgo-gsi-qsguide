@@ -26,6 +26,7 @@ class Csgogsi(QWidget):
         """Init UI."""
         super(Csgogsi, self).__init__(parent)
         # Widgets
+        self.serverthread = None
         self.connectbtn = QPushButton('Connect')
         self.connectbtn.clicked.connect(self.connect)
 
@@ -51,23 +52,23 @@ class Csgogsi(QWidget):
         self.setLayout(vbox)
         app_icon = QIcon()
         app_icon.addFile(
-            __dir__+"\\data\\csgo-16.ico", QSize(16, 16))
+            __dir__ + "\\data\\csgo-16.ico", QSize(16, 16))
         app_icon.addFile(
-            __dir__+"\\data\\csgo-20.ico", QSize(20, 20))
+            __dir__ + "\\data\\csgo-20.ico", QSize(20, 20))
         app_icon.addFile(
-            __dir__+"\\data\\csgo-24.ico", QSize(24, 24))
+            __dir__ + "\\data\\csgo-24.ico", QSize(24, 24))
         app_icon.addFile(
-            __dir__+"\\data\\csgo-32.ico", QSize(32, 32))
+            __dir__ + "\\data\\csgo-32.ico", QSize(32, 32))
         app_icon.addFile(
-            __dir__+"\\data\\csgo-48.ico", QSize(48, 48))
+            __dir__ + "\\data\\csgo-48.ico", QSize(48, 48))
         app_icon.addFile(
-            __dir__+"\\data\\csgo-64.ico", QSize(64, 64))
+            __dir__ + "\\data\\csgo-64.ico", QSize(64, 64))
         app_icon.addFile(
-            __dir__+"\\data\\csgo-128.ico", QSize(128, 128))
+            __dir__ + "\\data\\csgo-128.ico", QSize(128, 128))
         app_icon.addFile(
-            __dir__+"\\data\\csgo-256.ico", QSize(256, 256))
+            __dir__ + "\\data\\csgo-256.ico", QSize(256, 256))
         app_icon.addFile(
-            __dir__+"\\data\\csgo-512.ico", QSize(512, 512))
+            __dir__ + "\\data\\csgo-512.ico", QSize(512, 512))
         self.setWindowIcon(app_icon)
         self.setWindowTitle('CSGO GSI on LCD')
         self.setFixedSize(200, 75)
@@ -101,14 +102,19 @@ class Csgogsi(QWidget):
     def stop(self):
         """Stop the server."""
         self.serverthread.server.messenger.shutdown()
-        self.serverthread.server.messenger.wait()
-        self.serverthread.server.messenger.quit()
         self.serverthread.server.shutdown()
-        self.serverthread.wait()
-        self.serverthread.quit()
         self.connectbtn.clicked.disconnect()
         self.connectbtn.clicked.connect(self.connect)
         self.connectbtn.setText('Connect')
         self.comcb.setDisabled(False)
         self.connectbtn.setDisabled(False)
         self.refreshbtn.setDisabled(False)
+
+    def closeEvent(self, *args, **kwargs):
+        """Close everything before closing app."""
+        super(Csgogsi, self).closeEvent(*args, **kwargs)
+        if (self.serverthread is not None
+           and self.serverthread.server.messenger.is_alive()):
+            self.serverthread.server.messenger.shutdown()
+        if self.serverthread is not None and self.serverthread.isRunning():
+            self.serverthread.server.shutdown()
