@@ -48,36 +48,30 @@ class MyRequestHandler(BaseHTTPRequestHandler):
         if round_phase is not None:
             self.server.waiting = False
             bomb = get_bomb(payload)
-            if bomb == 'planted':
-                if bomb != self.server.bomb:
+            state = get_state(payload)
+            if bomb != self.server.bomb:
+                if bomb == 'planted':
                     self.server.bomb = bomb
                     self.server.messenger.changestatus("Bomb")
-            elif bomb == 'defused':
-                if bomb != self.server.bomb:
+                elif bomb == 'defused':
                     self.server.bomb = bomb
                     self.server.messenger.changestatus("Defused")
-            elif bomb == 'exploded':
-                if bomb != self.server.bomb:
+                elif bomb == 'exploded':
                     self.server.bomb = bomb
                     self.server.messenger.changestatus("Exploded")
-            else:
-                if bomb != self.server.bomb:
-                    self.server.bomb = bomb
-
-                    state = get_state(payload)
-                    if state != self.server.state:  # if the state has changed
-                        self.server.messenger.changestatus("!Freezetime")
-                        self.server.state = state  # Gather player's state
-                        # Progress bar HP AM
-                        self.server.messenger.health = int(state['health'])
-                        self.server.messenger.armor = int(state['armor'])
-                        self.server.messenger.money = int(state['money'])
-                        self.server.messenger.setkills(state['round_kills'],
-                                                       state['round_killhs'])
-                        if round_phase != 'freezetime':
-                            self.server.messenger.changestatus("!Freezetime")
-                        else:  # Not kill streak
-                            self.server.messenger.changestatus("Freezetime")
+            elif state != self.server.state:  # if the state has changed
+                self.server.messenger.changestatus("!Freezetime")
+                self.server.state = state  # Gather player's state
+                # Progress bar HP AM
+                self.server.messenger.health = int(state['health'])
+                self.server.messenger.armor = int(state['armor'])
+                self.server.messenger.money = int(state['money'])
+                self.server.messenger.setkills(state['round_kills'],
+                                               state['round_killhs'])
+                if round_phase != 'freezetime':
+                    self.server.messenger.changestatus("!Freezetime")
+                else:  # Not kill streak
+                    self.server.messenger.changestatus("Freezetime")
         elif not self.server.waiting:
             self.server.waiting = True  # isWaiting
             self.server.messenger.changestatus("None")
