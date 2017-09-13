@@ -8,11 +8,12 @@ CSGO's informations displayed on an Arduino featuring a bomb timer.
 from sys import argv
 from qtpy.QtWidgets import QApplication
 
-import csgo_gsi_arduino_lcd
+from .appui import Csgogsi
 
 
 def main():
-    APP = None
-    APP = QApplication(argv)
-    EX = csgo_gsi_arduino_lcd.Csgogsi()
-    APP.exec_()
+    """Launch."""
+    app = None
+    app = QApplication(argv)
+    ex = Csgogsi()
+    app.exec_()

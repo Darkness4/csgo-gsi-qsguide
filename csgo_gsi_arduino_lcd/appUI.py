@@ -41,7 +41,7 @@ class Csgogsi(QWidget):
         self.refreshbtn.resize(self.refreshbtn.sizeHint())
         self.refreshbtn.clicked.connect(self.refresh)
 
-        # Window
+        # Container
         vbox = QVBoxLayout()
         hbox = QHBoxLayout()
         vbox.addStretch(1)
@@ -50,6 +50,7 @@ class Csgogsi(QWidget):
         vbox.addLayout(hbox)
         vbox.addWidget(self.connectbtn)
         self.setLayout(vbox)
+        # Icon
         app_icon = QIcon()
         app_icon.addFile(
             __dir__ + "\\data\\csgo-16.ico", QSize(16, 16))
@@ -69,10 +70,12 @@ class Csgogsi(QWidget):
             __dir__ + "\\data\\csgo-256.ico", QSize(256, 256))
         app_icon.addFile(
             __dir__ + "\\data\\csgo-512.ico", QSize(512, 512))
+        # Window
         self.setWindowIcon(app_icon)
         self.setWindowTitle('CSGO GSI on LCD')
         self.setFixedSize(200, 75)
         self.setWindowFlags(Qt.WindowCloseButtonHint)
+
         self.show()
 
     @Slot()
@@ -88,11 +91,14 @@ class Csgogsi(QWidget):
     @Slot()
     def connect(self):
         """Connect to the server."""
+        # Disable buttons
         self.comcb.setDisabled(True)
         self.connectbtn.setDisabled(True)
         self.refreshbtn.setDisabled(True)
+        # Server start
         self.serverthread = ServerThread(str(self.comcb.currentText()))
         self.serverthread.start()
+        # Change connect button's function to "stop"
         self.connectbtn.clicked.disconnect()
         self.connectbtn.clicked.connect(self.stop)
         self.connectbtn.setDisabled(False)
@@ -101,11 +107,14 @@ class Csgogsi(QWidget):
     @Slot()
     def stop(self):
         """Stop the server."""
+        # Kill the messenger and server
         self.serverthread.server.messenger.shutdown()
         self.serverthread.server.shutdown()
         self.connectbtn.clicked.disconnect()
+        # Change button function
         self.connectbtn.clicked.connect(self.connect)
         self.connectbtn.setText('Connect')
+        # Enable buttons
         self.comcb.setDisabled(False)
         self.connectbtn.setDisabled(False)
         self.refreshbtn.setDisabled(False)

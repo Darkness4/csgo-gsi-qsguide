@@ -7,8 +7,8 @@ Server Thread.
 
 from time import asctime, sleep
 from serial import Serial
-from .httpserver import MyServer, MyRequestHandler
 from qtpy.QtCore import QThread
+from .httpserver import MyServer, MyRequestHandler
 
 
 class ServerThread(QThread):
@@ -18,17 +18,20 @@ class ServerThread(QThread):
         """Start thread and save the COM port."""
         QThread.__init__(self)
         self.com_str = com_str
+        self.ser_arduino = None
+        self.server = None
 
     def run(self):
         """Start the server."""
         self.ser_arduino = Serial(self.com_str, 9600)
-        sleep(2)
+        sleep(2)  # Wait for arduino
         print(asctime(), '-', "Arduino detected")
+        # Launch server
         self.server = MyServer(('localhost', 3000), MyRequestHandler)
-        self.server.init_state(self.ser_arduino)
+        self.server.init_state(self.ser_arduino)  # Init var
         print(asctime(), '-', 'CS:GO GSI Quick Start server starting')
-        self.server.serve_forever()
-        self.server.server_close()
-        self.ser_arduino.close()
+        self.server.serve_forever()  # Run
+        self.server.server_close()  # Close server
         print(asctime(), '-', 'CS:GO GSI Quick Start server stopped')
+        self.ser_arduino.close()  # Close COM port
         print(asctime(), '-', 'Serial stopped')
