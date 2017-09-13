@@ -29,7 +29,7 @@ class Messenger(Thread):
         self.health = None
         self.armor = None
         self.money = None
-        self.kills = None  # tuple (kills, hs)
+        self.kills = None  # tuple (total kills - hs, hs)
         self.status = "None"
         self.__start__ = True  # Order to start/stop
         self.__refresh__ = False  # Order to refresh informations
