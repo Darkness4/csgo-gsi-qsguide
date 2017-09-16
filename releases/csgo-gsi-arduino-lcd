@@ -15,6 +15,15 @@ from serial.tools import list_ports
 from qtpy.QtWidgets import (QPushButton, QApplication, QComboBox,
                             QVBoxLayout, QHBoxLayout, QWidget)
 from qtpy.QtCore import Slot, QThread, Qt
+from threading import Thread
+
+
+__title__ = "csgo-gsi-arduino-lcd"
+__version__ = "1.3.0"
+__project_url__ = 'https://github.com/Darkness4/csgo-gsi-arduino-lcd'
+__credits__ = ["tsuriga", "Darkness4"]
+
+print(__title__+" "+__version__)
 
 
 def get_round_phase(payload):
@@ -82,80 +91,67 @@ def serial_ports():
 class MyServer(HTTPServer):
     """Server storing CSGO's information."""
 
-    def init_state(self):
+    def init_state(self, ser_arduino):
         """You can store states over multiple requests in the server."""
         self.round_phase = None
         self.bomb = None
         self.state = None
         self.waiting = False
+        self.ser_arduino = ser_arduino
+        self.messenger = Messenger(ser_arduino)
+        self.messenger.start()
+        print(asctime(), '-', "Messenger is online.")
 
 
 class MyRequestHandler(BaseHTTPRequestHandler):
     """CSGO's requests handler."""
-
-    ser_arduino = None
 
     def do_POST(self):
         """Receive CSGO's informations."""
         length = int(self.headers['Content-Length'])
         body = self.rfile.read(length).decode('utf-8')
 
-        self.parse_payload(loads(body), self.ser_arduino)
+        self.parse_payload(loads(body))
 
         self.send_header('Content-type', 'text/html')
         self.send_response(200)
         self.end_headers()
 
     # Parsing and actions
-    def parse_payload(self, payload, ser_arduino):
+    def parse_payload(self, payload):
         """Search payload and execute arduino's codes."""
         round_phase = get_round_phase(payload)
 
         if round_phase is not None:
+            self.server.waiting = False
             bomb = get_bomb(payload)
-            if bomb == 'planted':
-                if bomb != self.server.bomb:
-                    self.server.bomb = bomb
-                    bombtimer(ser_arduino)
-            else:
-                self.server.bomb = bomb
-
             state = get_state(payload)
-            if state != self.server.state:  # if the state has changed
+            if bomb != self.server.bomb:
+                if bomb == 'planted':
+                    self.server.bomb = bomb
+                    self.server.messenger.changestatus("Bomb")
+                elif bomb == 'defused':
+                    self.server.bomb = bomb
+                    self.server.messenger.changestatus("Defused")
+                elif bomb == 'exploded':
+                    self.server.bomb = bomb
+                    self.server.messenger.changestatus("Exploded")
+            elif state != self.server.state:  # if the state has changed
+                self.server.messenger.changestatus("!Freezetime")
                 self.server.state = state  # Gather player's state
                 # Progress bar HP AM
-                health = int(state['health'])  # Health
-                armor = int(state['armor'])  # Armor
-                ser_arduino.write(b'H: ')  # Writing progress bar on Serial
-                ser_arduino.write(progress(int(health / 5)))
-                ser_arduino.write(progress(int((health - 25) / 5)))
-                ser_arduino.write(progress(int((health - 50) / 5)))
-                ser_arduino.write(progress(int((health - 75) / 5)))
-                ser_arduino.write(b' A: ')
-                ser_arduino.write(progress(int(armor / 5)))
-                ser_arduino.write(progress(int((armor - 25) / 5)))
-                ser_arduino.write(progress(int((armor - 50) / 5)))
-                ser_arduino.write(progress(int((armor - 75) / 5)))
-                # Wait for second line
-                sleep(0.1)
-                # Kill or Money
+                self.server.messenger.health = int(state['health'])
+                self.server.messenger.armor = int(state['armor'])
+                self.server.messenger.money = int(state['money'])
+                self.server.messenger.setkills(state['round_kills'],
+                                               state['round_killhs'])
                 if round_phase != 'freezetime':
-                    # HS and Kill counter
-                    headshots = int(state['round_killhs'])
-                    kills = state['round_kills'] - headshots
-                    ser_arduino.write(b'K: ')
-                    for _ in range(0, kills):  # counting
-                        ser_arduino.write(b'\x00')  # Byte 0 char : kill no HS
-                    for _ in range(0, headshots):  # counting
-                        ser_arduino.write(b'\x01')  # Byte 1 char : HS
+                    self.server.messenger.changestatus("!Freezetime")
                 else:  # Not kill streak
-                    ser_arduino.write(
-                        bytes('M: {}'.format(state['money']).encode()))
+                    self.server.messenger.changestatus("Freezetime")
         elif not self.server.waiting:
             self.server.waiting = True  # isWaiting
-            ser_arduino.write(b'Waiting for')
-            sleep(0.1)
-            ser_arduino.write(b'matches')
+            self.server.messenger.changestatus("None")
 
     def log_message(self, format, *args):
         """Prevents requests from printing into the console."""
@@ -165,6 +161,9 @@ class MyRequestHandler(BaseHTTPRequestHandler):
 class ServerThread(QThread):
     """Server's thread."""
 
+    ser_arduino = None
+    server = None
+
     def __init__(self, com_str):
         """Start thread and save the COM port."""
         QThread.__init__(self)
@@ -173,16 +172,16 @@ class ServerThread(QThread):
     def run(self):
         """Start the server."""
         self.ser_arduino = Serial(self.com_str, 9600)
-        sleep(2)
+        sleep(2)  # Wait for arduino
         print(asctime(), '-', "Arduino detected")
-        MyRequestHandler.ser_arduino = self.ser_arduino
+        # Launch server
         self.server = MyServer(('localhost', 3000), MyRequestHandler)
-        self.server.init_state()
+        self.server.init_state(self.ser_arduino)  # Init var
         print(asctime(), '-', 'CS:GO GSI Quick Start server starting')
-        self.server.serve_forever()
-        self.server.server_close()
-        self.ser_arduino.close()
+        self.server.serve_forever()  # Run
+        self.server.server_close()  # Close server
         print(asctime(), '-', 'CS:GO GSI Quick Start server stopped')
+        self.ser_arduino.close()  # Close COM port
         print(asctime(), '-', 'Serial stopped')
 
 
@@ -193,6 +192,7 @@ class Csgogsi(QWidget):
         """Init UI."""
         super(Csgogsi, self).__init__(parent)
         # Widgets
+        self.serverthread = None
         self.connectbtn = QPushButton('Connect')
         self.connectbtn.clicked.connect(self.connect)
 
@@ -207,7 +207,7 @@ class Csgogsi(QWidget):
         self.refreshbtn.resize(self.refreshbtn.sizeHint())
         self.refreshbtn.clicked.connect(self.refresh)
 
-        # Window
+        # Container
         vbox = QVBoxLayout()
         hbox = QHBoxLayout()
         vbox.addStretch(1)
@@ -216,9 +216,11 @@ class Csgogsi(QWidget):
         vbox.addLayout(hbox)
         vbox.addWidget(self.connectbtn)
         self.setLayout(vbox)
+        # Window
         self.setWindowTitle('CSGO GSI on LCD')
         self.setFixedSize(200, 75)
         self.setWindowFlags(Qt.WindowCloseButtonHint)
+
         self.show()
 
     @Slot()
@@ -234,11 +236,14 @@ class Csgogsi(QWidget):
     @Slot()
     def connect(self):
         """Connect to the server."""
+        # Disable buttons
         self.comcb.setDisabled(True)
         self.connectbtn.setDisabled(True)
         self.refreshbtn.setDisabled(True)
+        # Server start
         self.serverthread = ServerThread(str(self.comcb.currentText()))
         self.serverthread.start()
+        # Change connect button's function to "stop"
         self.connectbtn.clicked.disconnect()
         self.connectbtn.clicked.connect(self.stop)
         self.connectbtn.setDisabled(False)
@@ -247,19 +252,156 @@ class Csgogsi(QWidget):
     @Slot()
     def stop(self):
         """Stop the server."""
+        # Kill the messenger and server
+        self.serverthread.server.messenger.shutdown()
         self.serverthread.server.shutdown()
-        self.serverthread.wait()
-        self.serverthread.quit()
         self.connectbtn.clicked.disconnect()
+        # Change button function
         self.connectbtn.clicked.connect(self.connect)
         self.connectbtn.setText('Connect')
+        # Enable buttons
         self.comcb.setDisabled(False)
         self.connectbtn.setDisabled(False)
         self.refreshbtn.setDisabled(False)
+
+    def closeEvent(self, *args, **kwargs):
+        """Close everything before closing app."""
+        super(Csgogsi, self).closeEvent(*args, **kwargs)
+        if (self.serverthread is not None
+           and self.serverthread.server.messenger.is_alive()):
+            self.serverthread.server.messenger.shutdown()
+        if self.serverthread is not None and self.serverthread.isRunning():
+            self.serverthread.server.shutdown()
+
+
+class Messenger(Thread):
+    """Give order to the arduino."""
+
+    __start__ = True  # Order to start/stop
+    __refresh__ = False  # Order to refresh informations
+    health = None
+    armor = None
+    money = None
+    kills = None  # tuple (total kills - hs, hs)
+    status = "None"
+
+    def __init__(self, ser_arduino):
+        """Init save."""
+        super(Messenger, self).__init__()
+        self.ser_arduino = ser_arduino
+
+    def run(self):
+        """Thread start."""
+        while self.__start__:
+            if self.__refresh__:
+                self.__refresh__ = False  # Has refreshed
+                if self.status in ("Bomb", "Defused", "Exploded"):  # Bomb
+                    self.bombtimer()
+
+                elif self.status == "None":
+                    self.idle()
+
+                else:  # Default status
+                    self.playerstats()
+        print(asctime(), "-", "Messenger is dead.")
+
+    def bombtimer(self):
+        """40s bomb timer on arduino."""
+        offset = time()
+        actualtime = 40 - time() + offset
+        while actualtime > 0 and self.status == "Bomb":
+            oldtime = int(actualtime)
+            sleep(0.1)
+            actualtime = 40 - time() + offset
+            if oldtime != int(actualtime):  # Actualization only integer change
+                self.ser_arduino.write(b'BOMB PLANTED')
+                # Wait for second line
+                sleep(0.1)
+                self.ser_arduino.write(progress(int(actualtime)))  # 5s
+                self.ser_arduino.write(progress(int(actualtime - 5)))  # 10s
+                self.ser_arduino.write(progress(int(actualtime - 10)))  # 15s
+                self.ser_arduino.write(progress(int(actualtime - 15)))  # 20s
+                self.ser_arduino.write(progress(int(actualtime - 20)))  # 25s
+                self.ser_arduino.write(progress(int(actualtime - 25)))
+                self.ser_arduino.write(progress(int(actualtime - 30)))
+                self.ser_arduino.write(progress(int(actualtime - 35)))
+                self.ser_arduino.write(bytes(str(int(actualtime)).encode()))
+                sleep(0.1)
+        if self.status == "Defused":
+            self.ser_arduino.write(b'BOMB DEFUSED')
+            # Wait for second line
+            sleep(0.1)
+            self.ser_arduino.write(b' ')
+            sleep(0.1)
+        elif self.status == "Exploded":
+            self.ser_arduino.write(b'BOMB EXPLODED')
+            # Wait for second line
+            sleep(0.1)
+            self.ser_arduino.write(b' ')
+            sleep(0.1)
+
+    def playerstats(self):
+        """Player's stats writer."""
+        self.ser_arduino.write(b'H: ')  # Writing health and armor in Serial
+        self.ser_arduino.write(progress(int(self.health / 5)))
+        self.ser_arduino.write(progress(int((self.health - 25) / 5)))
+        self.ser_arduino.write(progress(int((self.health - 50) / 5)))
+        self.ser_arduino.write(progress(int((self.health - 75) / 5)))
+        self.ser_arduino.write(b' A: ')
+        self.ser_arduino.write(progress(int(self.armor / 5)))
+        self.ser_arduino.write(progress(int((self.armor - 25) / 5)))
+        self.ser_arduino.write(progress(int((self.armor - 50) / 5)))
+        self.ser_arduino.write(progress(int((self.armor - 75) / 5)))
+
+        # Wait for second line
+        sleep(0.1)
+
+        # Kill or Money
+        if self.status == "!Freezetime":
+            # HS and Kill counter
+            self.ser_arduino.write(b'K: ')
+            for _ in range(0, self.kills[0]):  # counting
+                self.ser_arduino.write(b'\x00')  # Byte 0 char : kill no HS
+            for _ in range(0, self.kills[1]):  # counting
+                self.ser_arduino.write(b'\x01')  # Byte 1 char : HS
+
+        elif self.status == "Freezetime":  # Not kill streak
+            self.ser_arduino.write(
+                bytes('M: {}'.format(self.money).encode()))
+        sleep(0.1)
+
+    def idle(self):
+        """Print text while idle."""
+        self.ser_arduino.write(b'Waiting for')
+        sleep(0.1)
+        self.ser_arduino.write(b'matches')
+
+    def changestatus(self, status):
+        """
+        Change Messenger behavior.
+
+        Available status :
+        'None'
+        'Bomb'
+        '!Freezetime'
+        'Freezetime'
+        'Defused'
+        'Exploded'
+        """
+        self.status = status
+        self.__refresh__ = True  # Informations need to be refreshed
+
+    def setkills(self, kills, heads):
+        """Set kills."""
+        self.kills = (int(kills)-int(heads), int(heads))
+
+    def shutdown(self):
+        """Stop the messenger."""
+        self.__start__ = False
 
 
 if __name__ == '__main__':
     APP = None
     APP = QApplication(argv)
     EX = Csgogsi()
-    APP.exec_()
+    exit(APP.exec_())
