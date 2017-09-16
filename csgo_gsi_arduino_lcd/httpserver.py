@@ -20,6 +20,7 @@ class MyServer(HTTPServer):
         self.bomb = None
         self.state = None
         self.waiting = False
+        self.payloadviewer = None
         self.ser_arduino = ser_arduino
         self.messenger = Messenger(ser_arduino)
         self.messenger.start()
@@ -75,6 +76,12 @@ class MyRequestHandler(BaseHTTPRequestHandler):
         elif not self.server.waiting:
             self.server.waiting = True  # isWaiting
             self.server.messenger.changestatus("None")
+
+        #  Start the payload viewer
+        if (self.server.payloadviewer is not None
+           and payload != self.server.payloadviewer.payload):
+            self.server.payloadviewer.setpayload(payload)
+            self.server.payloadviewer.refresh()
 
     def log_message(self, format, *args):
         """Prevents requests from printing into the console."""

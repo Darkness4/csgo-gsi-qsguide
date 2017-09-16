@@ -9,14 +9,13 @@ CSGO's informations displayed on an Arduino featuring a bomb timer.
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from sys import argv
 from time import time, sleep, asctime
-from json import loads
+from json import loads, dumps
 from serial import Serial
 from serial.tools import list_ports
 from qtpy.QtWidgets import (QPushButton, QApplication, QComboBox,
                             QVBoxLayout, QHBoxLayout, QWidget)
 from qtpy.QtCore import Slot, QThread, Qt
 from threading import Thread
-
 
 __title__ = "csgo-gsi-arduino-lcd"
 __version__ = "1.3.0"
@@ -97,6 +96,7 @@ class MyServer(HTTPServer):
         self.bomb = None
         self.state = None
         self.waiting = False
+        self.payloadviewer = None
         self.ser_arduino = ser_arduino
         self.messenger = Messenger(ser_arduino)
         self.messenger.start()
@@ -153,6 +153,12 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             self.server.waiting = True  # isWaiting
             self.server.messenger.changestatus("None")
 
+        #  Start the payload viewer
+        if (self.server.payloadviewer is not None
+           and payload != self.server.payloadviewer.payload):
+            self.server.payloadviewer.setpayload(payload)
+            self.server.payloadviewer.refresh()
+
     def log_message(self, format, *args):
         """Prevents requests from printing into the console."""
         return
@@ -188,9 +194,9 @@ class ServerThread(QThread):
 class Csgogsi(QWidget):
     """App UI."""
 
-    def __init__(self, parent=None):
+    def __init__(self):
         """Init UI."""
-        super(Csgogsi, self).__init__(parent)
+        super(Csgogsi, self).__init__()
         # Widgets
         self.serverthread = None
         self.connectbtn = QPushButton('Connect')
@@ -207,6 +213,9 @@ class Csgogsi(QWidget):
         self.refreshbtn.resize(self.refreshbtn.sizeHint())
         self.refreshbtn.clicked.connect(self.refresh)
 
+        self.payloadviewerbtn = QPushButton('View payload')
+        self.payloadviewerbtn.setDisabled(True)
+
         # Container
         vbox = QVBoxLayout()
         hbox = QHBoxLayout()
@@ -214,14 +223,15 @@ class Csgogsi(QWidget):
         hbox.addWidget(self.comcb)
         hbox.addWidget(self.refreshbtn)
         vbox.addLayout(hbox)
+        vbox.addWidget(self.payloadviewerbtn)
         vbox.addWidget(self.connectbtn)
         self.setLayout(vbox)
         # Window
         self.setWindowTitle('CSGO GSI on LCD')
-        self.setFixedSize(200, 75)
         self.setWindowFlags(Qt.WindowCloseButtonHint)
 
         self.show()
+        self.setFixedSize(self.size())
 
     @Slot()
     def refresh(self):
@@ -241,28 +251,66 @@ class Csgogsi(QWidget):
         self.connectbtn.setDisabled(True)
         self.refreshbtn.setDisabled(True)
         # Server start
-        self.serverthread = ServerThread(str(self.comcb.currentText()))
+        if self.serverthread is None:
+            self.serverthread = ServerThread(str(self.comcb.currentText()))
         self.serverthread.start()
         # Change connect button's function to "stop"
         self.connectbtn.clicked.disconnect()
         self.connectbtn.clicked.connect(self.stop)
         self.connectbtn.setDisabled(False)
         self.connectbtn.setText('Stop')
+        # Enable payloadviewer
+        self.payloadviewerbtn.clicked.connect(self.startpayloadviewer)
+        self.payloadviewerbtn.setDisabled(False)
 
     @Slot()
     def stop(self):
         """Stop the server."""
+        # Disable buttons
+        self.payloadviewerbtn.setDisabled(True)
         # Kill the messenger and server
         self.serverthread.server.messenger.shutdown()
+        if (self.serverthread.server.payloadviewer is not None
+           and self.serverthread.server.payloadviewer.is_alive()):
+            self.serverthread.server.payloadviewer.shutdown()
+            self.serverthread.server.payloadviewer = None
         self.serverthread.server.shutdown()
-        self.connectbtn.clicked.disconnect()
+        self.serverthread = None
         # Change button function
+        self.connectbtn.clicked.disconnect()
         self.connectbtn.clicked.connect(self.connect)
         self.connectbtn.setText('Connect')
+        self.payloadviewerbtn.clicked.disconnect()
+        self.payloadviewerbtn.clicked.connect(self.startpayloadviewer)
+        self.payloadviewerbtn.setText('View payload')
         # Enable buttons
         self.comcb.setDisabled(False)
         self.connectbtn.setDisabled(False)
         self.refreshbtn.setDisabled(False)
+
+    @Slot()
+    def startpayloadviewer(self):
+        """Stop the server."""
+        # Start payload vierwer
+        self.serverthread.server.payloadviewer = PayloadViewerThread()
+        self.serverthread.server.payloadviewer.start()
+
+        # Change button function
+        self.payloadviewerbtn.clicked.disconnect()
+        self.payloadviewerbtn.clicked.connect(self.stoppayloadviewer)
+        self.payloadviewerbtn.setText('Hide payload')
+
+    @Slot()
+    def stoppayloadviewer(self):
+        """Stop the server."""
+        # Stop payload viewer
+        self.serverthread.server.payloadviewer.shutdown()
+        self.serverthread.server.payloadviewer = None
+
+        # Change button function
+        self.payloadviewerbtn.clicked.disconnect()
+        self.payloadviewerbtn.clicked.connect(self.startpayloadviewer)
+        self.payloadviewerbtn.setText('View payload')
 
     def closeEvent(self, *args, **kwargs):
         """Close everything before closing app."""
@@ -398,6 +446,37 @@ class Messenger(Thread):
     def shutdown(self):
         """Stop the messenger."""
         self.__start__ = False
+
+
+class PayloadViewerThread(Thread):
+    """CSGO's requests handler."""
+
+    __start__ = True  # Order to start/stop
+    __refresh__ = False
+    payload = None
+
+    def __init__(self):
+        """Start thread."""
+        super(PayloadViewerThread, self).__init__()
+
+    def run(self):
+        """Print payload."""
+        while self.__start__:
+            if self.__refresh__:
+                print(dumps(self.payload, indent=4))
+                self.__refresh__ = False
+
+    def shutdown(self):
+        """Shutdown thread."""
+        self.__start__ = False
+
+    def setpayload(self, payload):
+        """Update payload."""
+        self.payload = payload
+
+    def refresh(self):
+        """Refresh."""
+        self.__refresh__ = True
 
 
 if __name__ == '__main__':
