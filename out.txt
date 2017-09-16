@@ -1,0 +1,579 @@
+Listening at http://127.0.0.1:3000
+Handling POST request...
+POST payload: {
+        "provider": {
+                "name": "Counter-Strike: Global Offensive",
+                "appid": 730,
+                "version": 13563,
+                "steamid": "76561198113122507",
+                "timestamp": 1482322811
+        },
+        "map": {
+                "mode": "competitive",
+                "name": "de_dust2",
+                "phase": "live",
+                "round": 4,
+                "team_ct": {
+                        "score": 4,
+                        "name": "SnappleT"
+                },
+                "team_t": {
+                        "score": 0
+                }
+        },
+        "round": {
+                "phase": "live",
+                "bomb": "planted"
+        },
+        "player": {
+                "steamid": "76561198113122507",
+                "clan": "SnappT",
+                "name": "Darketek",
+                "team": "CT",
+                "activity": "menu",
+                "state": {
+                        "health": 100,
+                        "armor": 100,
+                        "helmet": true,
+                        "defusekit": true,
+                        "flashed": 0,
+                        "smoked": 0,
+                        "burning": 0,
+                        "money": 3200,
+                        "round_kills": 0,
+                        "round_killhs": 0
+                },
+                "weapons": {
+                        "weapon_0": {
+                                "name": "weapon_knife",
+                                "paintkit": "default",
+                                "type": "Knife",
+                                "state": "holstered"
+                        },
+                        "weapon_1": {
+                                "name": "weapon_fiveseven",
+                                "paintkit": "cu_fiveseven_urban_hazard",
+                                "type": "Pistol",
+                                "ammo_clip": 20,
+                                "ammo_clip_max": 20,
+                                "ammo_reserve": 100,
+                                "state": "holstered"
+                        },
+                        "weapon_2": {
+                                "name": "weapon_awp",
+                                "paintkit": "hy_snakeskin",
+                                "type": "SniperRifle",
+                                "ammo_clip": 10,
+                                "ammo_clip_max": 10,
+                                "ammo_reserve": 24,
+                                "state": "active"
+                        },
+                        "weapon_3": {
+                                "name": "weapon_decoy",
+                                "paintkit": "default",
+                                "type": "Grenade",
+                                "ammo_reserve": 1,
+                                "state": "holstered"
+                        },
+                        "weapon_4": {
+                                "name": "weapon_hegrenade",
+                                "paintkit": "default",
+                                "type": "Grenade",
+                                "ammo_reserve": 1,
+                                "state": "holstered"
+                        }
+                },
+                "match_stats": {
+                        "kills": 14,
+                        "assists": 0,
+                        "deaths": 0,
+                        "mvps": 4,
+                        "score": 32
+                }
+        }
+}
+Handling POST request...
+POST payload: {
+        "provider": {
+                "name": "Counter-Strike: Global Offensive",
+                "appid": 730,
+                "version": 13563,
+                "steamid": "76561198113122507",
+                "timestamp": 1482322843
+        },
+        "map": {
+                "mode": "competitive",
+                "name": "de_dust2",
+                "phase": "live",
+                "round": 4,
+                "team_ct": {
+                        "score": 4,
+                        "name": "SnappleT"
+                },
+                "team_t": {
+                        "score": 0
+                }
+        },
+        "round": {
+                "phase": "live",
+                "bomb": "planted"
+        },
+        "player": {
+                "steamid": "76561198113122507",
+                "clan": "SnappT",
+                "name": "Darketek",
+                "team": "CT",
+                "activity": "textinput",
+                "state": {
+                        "health": 0,
+                        "armor": 0,
+                        "helmet": false,
+                        "flashed": 0,
+                        "smoked": 0,
+                        "burning": 0,
+                        "money": 3200,
+                        "round_kills": 0,
+                        "round_killhs": 0
+                },
+                "weapons": {
+
+                },
+                "match_stats": {
+                        "kills": 13,
+                        "assists": 0,
+                        "deaths": 1,
+                        "mvps": 4,
+                        "score": 30
+                }
+        },
+        "previously": {
+                "player": {
+                        "activity": "menu",
+                        "state": {
+                                "health": 100,
+                                "armor": 100,
+                                "helmet": true,
+                                "defusekit": true
+                        },
+                        "weapons": {
+                                "weapon_0": {
+                                        "name": "weapon_knife",
+                                        "paintkit": "default",
+                                        "type": "Knife",
+                                        "state": "holstered"
+                                },
+                                "weapon_1": {
+                                        "name": "weapon_fiveseven",
+                                        "paintkit": "cu_fiveseven_urban_hazard",
+                                        "type": "Pistol",
+                                        "ammo_clip": 20,
+                                        "ammo_clip_max": 20,
+                                        "ammo_reserve": 100,
+                                        "state": "holstered"
+                                },
+                                "weapon_2": {
+                                        "name": "weapon_awp",
+                                        "paintkit": "hy_snakeskin",
+                                        "type": "SniperRifle",
+                                        "ammo_clip": 10,
+                                        "ammo_clip_max": 10,
+                                        "ammo_reserve": 24,
+                                        "state": "active"
+                                },
+                                "weapon_3": {
+                                        "name": "weapon_decoy",
+                                        "paintkit": "default",
+                                        "type": "Grenade",
+                                        "ammo_reserve": 1,
+                                        "state": "holstered"
+                                },
+                                "weapon_4": {
+                                        "name": "weapon_hegrenade",
+                                        "paintkit": "default",
+                                        "type": "Grenade",
+                                        "ammo_reserve": 1,
+                                        "state": "holstered"
+                                }
+                        },
+                        "match_stats": {
+                                "kills": 14,
+                                "deaths": 0,
+                                "score": 32
+                        }
+                }
+        }
+}
+Handling POST request...
+POST payload: {
+        "provider": {
+                "name": "Counter-Strike: Global Offensive",
+                "appid": 730,
+                "version": 13563,
+                "steamid": "76561198113122507",
+                "timestamp": 1482322845
+        },
+        "map": {
+                "mode": "competitive",
+                "name": "de_dust2",
+                "phase": "live",
+                "round": 5,
+                "team_ct": {
+                        "score": 4,
+                        "name": "SnappleT"
+                },
+                "team_t": {
+                        "score": 0
+                }
+        },
+        "round": {
+                "phase": "over",
+                "win_team": "T",
+                "bomb": "exploded"
+        },
+        "player": {
+                "steamid": "76561198113122507",
+                "clan": "SnappT",
+                "name": "Darketek",
+                "team": "CT",
+                "activity": "playing",
+                "state": {
+                        "health": 0,
+                        "armor": 0,
+                        "helmet": false,
+                        "flashed": 0,
+                        "smoked": 0,
+                        "burning": 0,
+                        "money": 4600,
+                        "round_kills": 0,
+                        "round_killhs": 0
+                },
+                "weapons": {
+
+                },
+                "match_stats": {
+                        "kills": 13,
+                        "assists": 0,
+                        "deaths": 1,
+                        "mvps": 4,
+                        "score": 30
+                }
+        },
+        "previously": {
+                "map": {
+                        "round": 4
+                },
+                "round": {
+                        "phase": "live",
+                        "bomb": "planted"
+                },
+                "player": {
+                        "activity": "textinput",
+                        "state": {
+                                "money": 3200
+                        }
+                }
+        },
+        "added": {
+                "round": {
+                        "win_team": true
+                }
+        }
+}
+Handling POST request...
+POST payload: {
+        "provider": {
+                "name": "Counter-Strike: Global Offensive",
+                "appid": 730,
+                "version": 13563,
+                "steamid": "76561198113122507",
+                "timestamp": 1482322845
+        },
+        "map": {
+                "mode": "competitive",
+                "name": "de_dust2",
+                "phase": "live",
+                "round": 5,
+                "team_ct": {
+                        "score": 4,
+                        "name": "SnappleT"
+                },
+                "team_t": {
+                        "score": 1
+                }
+        },
+        "round": {
+                "phase": "over",
+                "win_team": "T",
+                "bomb": "exploded"
+        },
+        "player": {
+                "steamid": "76561198113122507",
+                "clan": "SnappT",
+                "name": "Darketek",
+                "team": "CT",
+                "activity": "playing",
+                "state": {
+                        "health": 0,
+                        "armor": 0,
+                        "helmet": false,
+                        "flashed": 0,
+                        "smoked": 0,
+                        "burning": 0,
+                        "money": 4600,
+                        "round_kills": 0,
+                        "round_killhs": 0
+                },
+                "weapons": {
+
+                },
+                "match_stats": {
+                        "kills": 13,
+                        "assists": 0,
+                        "deaths": 1,
+                        "mvps": 4,
+                        "score": 30
+                }
+        },
+        "previously": {
+                "map": {
+                        "team_t": {
+                                "score": 0
+                        }
+                }
+        }
+}
+Handling POST request...
+POST payload: {
+        "provider": {
+                "name": "Counter-Strike: Global Offensive",
+                "appid": 730,
+                "version": 13563,
+                "steamid": "76561198113122507",
+                "timestamp": 1482322847
+        },
+        "map": {
+                "mode": "competitive",
+                "name": "de_dust2",
+                "phase": "live",
+                "round": 5,
+                "team_ct": {
+                        "score": 4,
+                        "name": "SnappleT"
+                },
+                "team_t": {
+                        "score": 1
+                }
+        },
+        "round": {
+                "phase": "over",
+                "win_team": "T",
+                "bomb": "exploded"
+        },
+        "player": {
+                "steamid": "76561197960265735",
+                "name": "Wesley",
+                "team": "CT",
+                "activity": "playing",
+                "state": {
+                        "health": 96,
+                        "armor": 97,
+                        "helmet": true,
+                        "flashed": 0,
+                        "smoked": 0,
+                        "burning": 0,
+                        "money": 9600,
+                        "round_kills": 0,
+                        "round_killhs": 0
+                },
+                "weapons": {
+                        "weapon_0": {
+                                "name": "weapon_knife",
+                                "paintkit": "default",
+                                "type": "Knife",
+                                "state": "active"
+                        },
+                        "weapon_1": {
+                                "name": "weapon_p250",
+                                "paintkit": "default",
+                                "type": "Pistol",
+                                "ammo_clip": 13,
+                                "ammo_clip_max": 13,
+                                "ammo_reserve": 26,
+                                "state": "holstered"
+                        },
+                        "weapon_2": {
+                                "name": "weapon_xm1014",
+                                "paintkit": "default",
+                                "type": "Shotgun",
+                                "ammo_clip": 7,
+                                "ammo_clip_max": 7,
+                                "ammo_reserve": 32,
+                                "state": "holstered"
+                        },
+                        "weapon_3": {
+                                "name": "weapon_smokegrenade",
+                                "paintkit": "default",
+                                "type": "Grenade",
+                                "ammo_reserve": 1,
+                                "state": "holstered"
+                        }
+                },
+                "match_stats": {
+                        "kills": -1,
+                        "assists": 0,
+                        "deaths": 1,
+                        "mvps": 0,
+                        "score": 1
+                }
+        },
+        "previously": {
+                "player": {
+                        "steamid": "76561198113122507",
+                        "clan": "SnappT",
+                        "name": "Darketek",
+                        "state": {
+                                "health": 0,
+                                "armor": 0,
+                                "helmet": false,
+                                "money": 4600
+                        },
+                        "match_stats": {
+                                "kills": 13,
+                                "mvps": 4,
+                                "score": 30
+                        }
+                }
+        },
+        "added": {
+                "player": {
+                        "weapons": {
+                                "weapon_0": true,
+                                "weapon_1": true,
+                                "weapon_2": true,
+                                "weapon_3": true
+                        }
+                }
+        }
+}
+Handling POST request...
+POST payload: {
+        "provider": {
+                "name": "Counter-Strike: Global Offensive",
+                "appid": 730,
+                "version": 13563,
+                "steamid": "76561198113122507",
+                "timestamp": 1482322852
+        },
+        "map": {
+                "mode": "competitive",
+                "name": "de_dust2",
+                "phase": "live",
+                "round": 5,
+                "team_ct": {
+                        "score": 4,
+                        "name": "SnappleT"
+                },
+                "team_t": {
+                        "score": 1
+                }
+        },
+        "round": {
+                "phase": "freezetime"
+        },
+        "player": {
+                "steamid": "76561198113122507",
+                "clan": "SnappT",
+                "name": "Darketek",
+                "team": "CT",
+                "activity": "playing",
+                "state": {
+                        "health": 100,
+                        "armor": 0,
+                        "helmet": false,
+                        "flashed": 0,
+                        "smoked": 0,
+                        "burning": 0,
+                        "money": 4600,
+                        "round_kills": 0,
+                        "round_killhs": 0
+                },
+                "weapons": {
+                        "weapon_0": {
+                                "name": "weapon_knife",
+                                "paintkit": "default",
+                                "type": "Knife",
+                                "state": "holstered"
+                        },
+                        "weapon_1": {
+                                "name": "weapon_hkp2000",
+                                "paintkit": "cu_p2000_pulse",
+                                "type": "Pistol",
+                                "ammo_clip": 13,
+                                "ammo_clip_max": 13,
+                                "ammo_reserve": 52,
+                                "state": "active"
+                        }
+                },
+                "match_stats": {
+                        "kills": 13,
+                        "assists": 0,
+                        "deaths": 1,
+                        "mvps": 4,
+                        "score": 30
+                }
+        },
+        "previously": {
+                "round": {
+                        "phase": "over",
+                        "win_team": "T",
+                        "bomb": "exploded"
+                },
+                "player": {
+                        "steamid": "76561197960265735",
+                        "name": "Wesley",
+                        "state": {
+                                "health": 96,
+                                "armor": 97,
+                                "helmet": true,
+                                "money": 9600
+                        },
+                        "weapons": {
+                                "weapon_0": {
+                                        "state": "active"
+                                },
+                                "weapon_1": {
+                                        "name": "weapon_p250",
+                                        "paintkit": "default",
+                                        "ammo_reserve": 26,
+                                        "state": "holstered"
+                                },
+                                "weapon_2": {
+                                        "name": "weapon_xm1014",
+                                        "paintkit": "default",
+                                        "type": "Shotgun",
+                                        "ammo_clip": 7,
+                                        "ammo_clip_max": 7,
+                                        "ammo_reserve": 32,
+                                        "state": "holstered"
+                                },
+                                "weapon_3": {
+                                        "name": "weapon_smokegrenade",
+                                        "paintkit": "default",
+                                        "type": "Grenade",
+                                        "ammo_reserve": 1,
+                                        "state": "holstered"
+                                }
+                        },
+                        "match_stats": {
+                                "kills": -1,
+                                "mvps": 0,
+                                "score": 1
+                        }
+                }
+        },
+        "added": {
+                "player": {
+                        "clan": true
+                }
+        }
+}
