@@ -14,12 +14,13 @@ from .httpserver import MyServer, MyRequestHandler
 class ServerThread(QThread):
     """Server's thread."""
 
+    ser_arduino = None
+    server = None
+
     def __init__(self, com_str):
         """Start thread and save the COM port."""
         QThread.__init__(self)
         self.com_str = com_str
-        self.ser_arduino = None
-        self.server = None
 
     def run(self):
         """Start the server."""

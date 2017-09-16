@@ -22,17 +22,18 @@ def progress(i):
 class Messenger(Thread):
     """Give order to the arduino."""
 
+    __start__ = True  # Order to start/stop
+    __refresh__ = False  # Order to refresh informations
+    health = None
+    armor = None
+    money = None
+    kills = None  # tuple (total kills - hs, hs)
+    status = "None"
+
     def __init__(self, ser_arduino):
         """Init save."""
         super(Messenger, self).__init__()
         self.ser_arduino = ser_arduino
-        self.health = None
-        self.armor = None
-        self.money = None
-        self.kills = None  # tuple (total kills - hs, hs)
-        self.status = "None"
-        self.__start__ = True  # Order to start/stop
-        self.__refresh__ = False  # Order to refresh informations
 
     def run(self):
         """Thread start."""
