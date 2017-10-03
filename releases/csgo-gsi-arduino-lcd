@@ -58,30 +58,6 @@ def progress(i):
     return switcher[True]
 
 
-def bombtimer(ser_arduino):
-    """40s bomb timer on arduino."""
-    offset = time()
-    actualtime = 40 - time() + offset
-    while actualtime > 0:
-        oldtime = int(actualtime)
-        sleep(0.1)
-        actualtime = 40 - time() + offset
-        if oldtime != int(actualtime):  # Actualization
-            ser_arduino.write(b'BOMB PLANTED')
-            # Wait for second line
-            sleep(0.1)
-            ser_arduino.write(progress(int(actualtime)))  # 5s max
-            ser_arduino.write(progress(int(actualtime - 5)))  # 10s max
-            ser_arduino.write(progress(int(actualtime - 10)))  # 15s max
-            ser_arduino.write(progress(int(actualtime - 15)))  # 20s max
-            ser_arduino.write(progress(int(actualtime - 20)))  # 25s max
-            ser_arduino.write(progress(int(actualtime - 25)))
-            ser_arduino.write(progress(int(actualtime - 30)))
-            ser_arduino.write(progress(int(actualtime - 35)))
-            ser_arduino.write(bytes(str(int(actualtime)).encode()))
-    return
-
-
 def serial_ports():
     """List serial port names."""
     return [port.device for port in list_ports.comports()]
@@ -160,7 +136,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             self.server.payloadviewer.refresh()
 
     def log_message(self, format, *args):
-        """Prevents requests from printing into the console."""
+        """Prevent requests from printing into the console."""
         return
 
 
@@ -354,7 +330,7 @@ class Messenger(Thread):
         print(asctime(), "-", "Messenger is dead.")
 
     def bombtimer(self):
-        """40s bomb timer on arduino."""
+        """40 sec bomb timer on arduino."""
         offset = time()
         actualtime = 40 - time() + offset
         while actualtime > 0 and self.status == "Bomb":
@@ -389,7 +365,7 @@ class Messenger(Thread):
             sleep(0.1)
 
     def playerstats(self):
-        """Player's stats writer."""
+        """Player stats writer."""
         self.ser_arduino.write(b'H: ')  # Writing health and armor in Serial
         self.ser_arduino.write(progress(int(self.health / 5)))
         self.ser_arduino.write(progress(int((self.health - 25) / 5)))

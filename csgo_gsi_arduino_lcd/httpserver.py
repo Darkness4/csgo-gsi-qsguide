@@ -84,5 +84,5 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             self.server.payloadviewer.refresh()
 
     def log_message(self, format, *args):
-        """Prevents requests from printing into the console."""
+        """Prevent requests from printing into the console."""
         return

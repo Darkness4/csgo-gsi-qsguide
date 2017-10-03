@@ -51,7 +51,7 @@ class Messenger(Thread):
         print(asctime(), "-", "Messenger is dead.")
 
     def bombtimer(self):
-        """40s bomb timer on arduino."""
+        """40 sec bomb timer on arduino."""
         offset = time()
         actualtime = 40 - time() + offset
         while actualtime > 0 and self.status == "Bomb":
@@ -86,7 +86,7 @@ class Messenger(Thread):
             sleep(0.1)
 
     def playerstats(self):
-        """Player's stats writer."""
+        """Player stats writer."""
         self.ser_arduino.write(b'H: ')  # Writing health and armor in Serial
         self.ser_arduino.write(progress(int(self.health / 5)))
         self.ser_arduino.write(progress(int((self.health - 25) / 5)))
@@ -125,7 +125,7 @@ class Messenger(Thread):
         """
         Change Messenger behavior.
 
-        Available status :
+        Available status:
         'None'
         'Bomb'
         '!Freezetime'
