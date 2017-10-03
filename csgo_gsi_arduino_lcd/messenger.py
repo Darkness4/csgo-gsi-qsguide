@@ -48,6 +48,8 @@ class Messenger(Thread):
 
                 else:  # Default status
                     self.playerstats()
+            else:
+                sleep(0.5)  # Saving consumption
         print(asctime(), "-", "Messenger is dead.")
 
     def bombtimer(self):
