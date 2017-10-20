@@ -6,9 +6,11 @@ Server Thread.
 """
 
 from time import asctime, sleep
-from serial import Serial
+
 from qtpy.QtCore import QThread
-from .httpserver import MyServer, MyRequestHandler
+from serial import Serial
+
+from .httpserver import MyRequestHandler, MyServer
 
 
 class ServerThread(QThread):
