@@ -49,7 +49,7 @@ class Messenger(Thread):
                 else:  # Default status
                     self.playerstats()
             else:
-                sleep(0.5)  # Saving consumption
+                sleep(0.1)  # Saving consumption
         print(asctime(), "-", "Messenger is dead.")
 
     def bombtimer(self):
@@ -89,6 +89,8 @@ class Messenger(Thread):
 
     def playerstats(self):
         """Player stats writer."""
+        # Not too fast
+        sleep(0.1)
         self.ser_arduino.write(b'H: ')  # Writing health and armor in Serial
         self.ser_arduino.write(progress(int(self.health / 5)))
         self.ser_arduino.write(progress(int((self.health - 25) / 5)))
