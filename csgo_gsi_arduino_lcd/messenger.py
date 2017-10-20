@@ -5,7 +5,7 @@ Messenger Thread.
 @auteur: Darkness4
 """
 from threading import Thread
-from time import asctime, time, sleep
+from time import asctime, sleep, time
 
 
 def progress(i):

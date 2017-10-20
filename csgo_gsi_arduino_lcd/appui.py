@@ -121,8 +121,8 @@ class Csgogsi(QWidget):
         self.payloadviewerbtn.setDisabled(True)
         # Kill the messenger and server
         self.serverthread.server.messenger.shutdown()
-        if (self.serverthread.server.payloadviewer is not None
-           and self.serverthread.server.payloadviewer.is_alive()):
+        if self.serverthread.server.payloadviewer is not None \
+           and self.serverthread.server.payloadviewer.is_alive():
             self.serverthread.server.payloadviewer.shutdown()
             self.serverthread.server.payloadviewer = None
         self.serverthread.server.shutdown()
@@ -166,8 +166,8 @@ class Csgogsi(QWidget):
     def closeEvent(self, *args, **kwargs):
         """Close everything before closing app."""
         super(Csgogsi, self).closeEvent(*args, **kwargs)
-        if (self.serverthread is not None
-           and self.serverthread.server.messenger.is_alive()):
+        if self.serverthread is not None \
+           and self.serverthread.server.messenger.is_alive():
             self.serverthread.server.messenger.shutdown()
         if self.serverthread is not None and self.serverthread.isRunning():
             self.serverthread.server.shutdown()

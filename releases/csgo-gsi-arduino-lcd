@@ -7,24 +7,26 @@ CSGO's informations displayed on an Arduino featuring a bomb timer.
 """
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from json import dumps, loads
 from sys import argv
-from time import time, sleep, asctime
-from json import loads, dumps
+from threading import Thread
+from time import asctime, sleep, time
+
+from qtpy.QtCore import Qt, QThread, Slot
+from qtpy.QtWidgets import (QApplication, QComboBox, QHBoxLayout, QPushButton,
+                            QVBoxLayout, QWidget)
 from serial import Serial
 from serial.tools import list_ports
-from qtpy.QtWidgets import (QPushButton, QApplication, QComboBox,
-                            QVBoxLayout, QHBoxLayout, QWidget)
-from qtpy.QtCore import Slot, QThread, Qt
-from threading import Thread
 
 __title__ = "csgo-gsi-arduino-lcd"
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 __project_url__ = 'https://github.com/Darkness4/csgo-gsi-arduino-lcd'
 __credits__ = ["tsuriga", "Darkness4"]
 
 print(__title__+" "+__version__)
 
 
+# getinfo.py
 def get_round_phase(payload):
     """Get round phase."""
     if 'round' in payload and 'phase' in payload['round']:
@@ -47,22 +49,12 @@ def get_bomb(payload):
         return payload['round']['bomb']
 
 
-def progress(i):
-    """Progress bar, for arduino 5px large."""
-    switcher = {i <= 0: b"\x07",
-                i == 1: b"\x02",
-                i == 2: b"\x03",
-                i == 3: b"\x04",
-                i == 4: b"\x05",
-                i >= 5: b"\x06"}
-    return switcher[True]
-
-
 def serial_ports():
     """List serial port names."""
     return [port.device for port in list_ports.comports()]
 
 
+# httpserver.py
 class MyServer(HTTPServer):
     """Server storing CSGO's information."""
 
@@ -103,15 +95,15 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             bomb = get_bomb(payload)
             state = get_state(payload)
             if bomb != self.server.bomb:
+                self.server.bomb = bomb
                 if bomb == 'planted':
-                    self.server.bomb = bomb
                     self.server.messenger.changestatus("Bomb")
                 elif bomb == 'defused':
-                    self.server.bomb = bomb
                     self.server.messenger.changestatus("Defused")
                 elif bomb == 'exploded':
-                    self.server.bomb = bomb
                     self.server.messenger.changestatus("Exploded")
+                else:
+                    self.server.messenger.changestatus("None")
             elif state != self.server.state:  # if the state has changed
                 self.server.messenger.changestatus("!Freezetime")
                 self.server.state = state  # Gather player's state
@@ -130,8 +122,8 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             self.server.messenger.changestatus("None")
 
         #  Start the payload viewer
-        if (self.server.payloadviewer is not None
-           and payload != self.server.payloadviewer.payload):
+        if self.server.payloadviewer is not None \
+           and payload != self.server.payloadviewer.payload:
             self.server.payloadviewer.setpayload(payload)
             self.server.payloadviewer.refresh()
 
@@ -140,6 +132,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
         return
 
 
+# server.py
 class ServerThread(QThread):
     """Server's thread."""
 
@@ -167,6 +160,7 @@ class ServerThread(QThread):
         print(asctime(), '-', 'Serial stopped')
 
 
+# appui.py
 class Csgogsi(QWidget):
     """App UI."""
 
@@ -246,8 +240,8 @@ class Csgogsi(QWidget):
         self.payloadviewerbtn.setDisabled(True)
         # Kill the messenger and server
         self.serverthread.server.messenger.shutdown()
-        if (self.serverthread.server.payloadviewer is not None
-           and self.serverthread.server.payloadviewer.is_alive()):
+        if self.serverthread.server.payloadviewer is not None \
+           and self.serverthread.server.payloadviewer.is_alive():
             self.serverthread.server.payloadviewer.shutdown()
             self.serverthread.server.payloadviewer = None
         self.serverthread.server.shutdown()
@@ -291,11 +285,23 @@ class Csgogsi(QWidget):
     def closeEvent(self, *args, **kwargs):
         """Close everything before closing app."""
         super(Csgogsi, self).closeEvent(*args, **kwargs)
-        if (self.serverthread is not None
-           and self.serverthread.server.messenger.is_alive()):
+        if self.serverthread is not None \
+           and self.serverthread.server.messenger.is_alive():
             self.serverthread.server.messenger.shutdown()
         if self.serverthread is not None and self.serverthread.isRunning():
             self.serverthread.server.shutdown()
+
+
+# messenger.py
+def progress(i):
+    """Progress bar, for arduino 5px large."""
+    switcher = {i <= 0: b"\x07",
+                i == 1: b"\x02",
+                i == 2: b"\x03",
+                i == 3: b"\x04",
+                i == 4: b"\x05",
+                i >= 5: b"\x06"}
+    return switcher[True]
 
 
 class Messenger(Thread):
@@ -327,8 +333,8 @@ class Messenger(Thread):
 
                 else:  # Default status
                     self.playerstats()
-        else:
-            sleep(0.5)  # Save consumption
+            else:
+                sleep(0.1)  # Saving consumption
         print(asctime(), "-", "Messenger is dead.")
 
     def bombtimer(self):
@@ -368,6 +374,8 @@ class Messenger(Thread):
 
     def playerstats(self):
         """Player stats writer."""
+        # Not too fast
+        sleep(0.1)
         self.ser_arduino.write(b'H: ')  # Writing health and armor in Serial
         self.ser_arduino.write(progress(int(self.health / 5)))
         self.ser_arduino.write(progress(int((self.health - 25) / 5)))
@@ -406,7 +414,7 @@ class Messenger(Thread):
         """
         Change Messenger behavior.
 
-        Available status :
+        Available status:
         'None'
         'Bomb'
         '!Freezetime'
@@ -426,6 +434,7 @@ class Messenger(Thread):
         self.__start__ = False
 
 
+# tableviewer.py
 class PayloadViewerThread(Thread):
     """CSGO's requests handler."""
 
