@@ -51,15 +51,15 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             bomb = get_bomb(payload)
             state = get_state(payload)
             if bomb != self.server.bomb:
+                self.server.bomb = bomb
                 if bomb == 'planted':
-                    self.server.bomb = bomb
                     self.server.messenger.changestatus("Bomb")
                 elif bomb == 'defused':
-                    self.server.bomb = bomb
                     self.server.messenger.changestatus("Defused")
                 elif bomb == 'exploded':
-                    self.server.bomb = bomb
                     self.server.messenger.changestatus("Exploded")
+                else:
+                    self.server.messenger.changestatus("None")
             elif state != self.server.state:  # if the state has changed
                 self.server.messenger.changestatus("!Freezetime")
                 self.server.state = state  # Gather player's state
@@ -78,8 +78,8 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             self.server.messenger.changestatus("None")
 
         #  Start the payload viewer
-        if (self.server.payloadviewer is not None
-           and payload != self.server.payloadviewer.payload):
+        if self.server.payloadviewer is not None \
+           and payload != self.server.payloadviewer.payload:
             self.server.payloadviewer.setpayload(payload)
             self.server.payloadviewer.refresh()
 
