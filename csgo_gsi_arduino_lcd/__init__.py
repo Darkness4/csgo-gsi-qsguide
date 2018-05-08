@@ -12,4 +12,4 @@ __version__ = "1.3.1"
 __project_url__ = 'https://github.com/Darkness4/csgo-gsi-arduino-lcd'
 __credits__ = ["tsuriga", "Darkness4"]
 
-print(__title__+" "+__version__)
+print(__title__, __version__)
