@@ -193,7 +193,7 @@ class Csgogsi(QWidget):
 
     def close_all(self, *args, **kwargs) -> None:
         """Close everything before closing app."""
-        super(Csgogsi, self).close_all(*args, **kwargs)
+        super(Csgogsi, self).closeEvent(*args, **kwargs)
         if self.server_thread is not None \
            and self.server_thread.server.messenger.is_alive():
             self.server_thread.server.messenger.shutdown()
