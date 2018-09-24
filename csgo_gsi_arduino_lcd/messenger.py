@@ -113,7 +113,7 @@ class Messenger(Thread):
 
     @property
     def status(self) -> str:
-        """Get the health."""
+        """Get the status."""
         return self.__status
 
     @status.setter
@@ -133,8 +133,8 @@ class Messenger(Thread):
         self.__refresh = True  # Informations need to be refreshed
 
     @property
-    def kills(self) -> int:
-        """Get the health."""
+    def kills(self) -> tuple:
+        """Get the kills (K, HS)."""
         return self.__kills
 
     @kills.setter

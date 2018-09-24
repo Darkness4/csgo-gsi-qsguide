@@ -10,10 +10,31 @@ from threading import Thread
 
 
 class PayloadViewerThread(Thread):
-    """CSGO's requests handler."""
+    """
+    Payload Viewer.
+
+    Attributes
+    ----------
+    __payload : dict
+        Payload from CSGO.
+    refreshable : bool
+        Can be refreshed.
+    start : bool
+        Order to run.
+
+
+    Methods
+    -------
+    run()
+        Start the Thread and run Payload Viewer.
+    shutdown()
+        Shutdown the Payload Viewer.
+    refresh()
+        Order to refresh the Payload.
+    """
 
     start = True  # Order to start/stop
-    refreshing = False
+    refreshable = False
     __payload = None
 
     def __init__(self) -> None:
@@ -23,9 +44,9 @@ class PayloadViewerThread(Thread):
     def run(self) -> None:
         """Print payload."""
         while self.start:
-            if self.refreshing:
+            if self.refreshable:
                 print(dumps(self.payload, indent=4))
-                self.refreshing = False
+                self.refreshable = False
 
     def shutdown(self) -> None:
         """Shutdown thread."""
@@ -33,7 +54,7 @@ class PayloadViewerThread(Thread):
 
     @property
     def payload(self) -> dict:
-        """Get the color."""
+        """Get the payload."""
         return self.__payload
 
     @payload.setter
@@ -43,4 +64,4 @@ class PayloadViewerThread(Thread):
 
     def refresh(self) -> None:
         """Refresh."""
-        self.refreshing = True
+        self.refreshable = True
