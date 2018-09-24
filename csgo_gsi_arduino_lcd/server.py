@@ -14,24 +14,40 @@ from .httpserver import MyRequestHandler, MyServer
 
 
 class ServerThread(QThread):
-    """Server's thread."""
+    """
+    Server's thread.
+
+    Attributes
+    ----------
+    com_str : str
+        COM Port in str.
+    ser_arduino : Serial
+        Status of Messenger.
+    server : Server
+        Status of the refresher.
+
+    Methods
+    -------
+    run()
+        Start the Thread and run Server.
+
+    """
 
     ser_arduino = None
     server = None
 
-    def __init__(self, com_str):
+    def __init__(self, com_str) -> None:
         """Start thread and save the COM port."""
         QThread.__init__(self)
         self.com_str = com_str
 
-    def run(self):
+    def run(self) -> None:
         """Start the server."""
         self.ser_arduino = Serial(self.com_str, 9600)
         sleep(2)  # Wait for arduino
         print(asctime(), '-', "Arduino detected")
         # Launch server
-        self.server = MyServer(('localhost', 3000), MyRequestHandler)
-        self.server.init_state(self.ser_arduino)  # Init var
+        self.server = MyServer(self.ser_arduino, ('localhost', 3000), MyRequestHandler)
         print(asctime(), '-', 'CS:GO GSI Quick Start server starting')
         self.server.serve_forever()  # Run
         self.server.server_close()  # Close server

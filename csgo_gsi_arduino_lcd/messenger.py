@@ -8,8 +8,20 @@ from threading import Thread
 from time import asctime, sleep, time
 
 
-def progress(i):
-    """Progress bar, for arduino 5px large."""
+def progress(i: int) -> bytes:
+    """
+    Progress bar, for arduino 5px large.
+
+    Parameters
+    ----------
+    i : int
+        Select which character to send to Arduino.
+
+    Returns
+    -------
+    bytes : Character send to Arduino.
+
+    """
     switcher = {i <= 0: b"\x07",
                 i == 1: b"\x02",
                 i == 2: b"\x03",
@@ -20,39 +32,107 @@ def progress(i):
 
 
 class Messenger(Thread):
-    """Give order to the arduino."""
+    """
+    Give order to the arduino.
 
-    __start__ = True  # Order to start/stop
-    __refresh__ = False  # Order to refresh informations
-    health = None
-    armor = None
-    money = None
+    Attributes
+    ----------
+    __armor : int
+        Armor points.
+    __health : int
+        Health points.
+    __money : int
+        Money left.
+    __refresh : bool
+        Status of the refresher.
+    __start : bool
+        Status of Messenger.
+    kills : tuple
+        Number of kills and heads.
+    ser_arduino : Serial
+        Serial class of the Arduino.
+    status : string
+        Status of the round.
+
+    Methods
+    -------
+    bomb_timer()
+        Start a bomb timer.
+    change_status(status: str)
+        Change Messenger behavior.
+    idle()
+        Put Messenger on idle and write a message.
+    run()
+        Start the Thread and run Messenger.
+    set_kills(kills: int, heads: int)
+        Set the number of kills.
+    shutdown()
+        Shutdown Messenger.
+    write_player_stats()
+        Write the player stats on Arduino.
+
+    """
+    __armor = None
+    __health = None
+    __money = None
+    __refresh = False  # Order to refresh informations
+    __start = True  # Order to start/stop
     kills = None  # tuple (total kills - hs, hs)
     status = "None"
 
-    def __init__(self, ser_arduino):
+    def __init__(self, ser_arduino) -> None:
         """Init save."""
         super(Messenger, self).__init__()
         self.ser_arduino = ser_arduino
 
-    def run(self):
+    @property
+    def armor(self) -> int:
+        """Get the armor."""
+        return self.__armor
+
+    @armor.setter
+    def armor(self, armor: int) -> None:
+        """Set the armor."""
+        self.__armor = armor
+
+    @property
+    def money(self) -> int:
+        """Get the money."""
+        return self.__money
+
+    @money.setter
+    def money(self, money: int) -> None:
+        """Set the money."""
+        self.__money = money
+
+    @property
+    def health(self) -> int:
+        """Get the health."""
+        return self.__health
+
+    @health.setter
+    def health(self, health: int) -> None:
+        """Set the health."""
+        self.__health = health
+
+    def run(self) -> None:
         """Thread start."""
-        while self.__start__:
-            if self.__refresh__:
-                self.__refresh__ = False  # Has refreshed
+        while self.__start:
+            if self.__refresh:
+                self.__refresh = False  # Has refreshed
                 if self.status in ("Bomb", "Defused", "Exploded"):  # Bomb
-                    self.bombtimer()
+                    self.bomb_timer()
 
                 elif self.status == "None":
                     self.idle()
 
                 else:  # Default status
-                    self.playerstats()
+                    self.write_player_stats()
             else:
                 sleep(0.1)  # Saving consumption
         print(asctime(), "-", "Messenger is dead.")
 
-    def bombtimer(self):
+    def bomb_timer(self) -> None:
         """40 sec bomb timer on arduino."""
         offset = time()
         actualtime = 40 - time() + offset
@@ -87,11 +167,13 @@ class Messenger(Thread):
             self.ser_arduino.write(b' ')
             sleep(0.1)
 
-    def playerstats(self):
+    def write_player_stats(self) -> None:
         """Player stats writer."""
         # Not too fast
         sleep(0.1)
-        self.ser_arduino.write(b'H: ')  # Writing health and armor in Serial
+
+        # Writing health and armor in Serial
+        self.ser_arduino.write(b'H: ')
         self.ser_arduino.write(progress(int(self.health / 5)))
         self.ser_arduino.write(progress(int((self.health - 25) / 5)))
         self.ser_arduino.write(progress(int((self.health - 50) / 5)))
@@ -113,19 +195,19 @@ class Messenger(Thread):
                 self.ser_arduino.write(b'\x00')  # Byte 0 char : kill no HS
             for _ in range(0, self.kills[1]):  # counting
                 self.ser_arduino.write(b'\x01')  # Byte 1 char : HS
-
-        elif self.status == "Freezetime":  # Not kill streak
+        # Not kill streak
+        elif self.status == "Freezetime":
             self.ser_arduino.write(
                 bytes('M: {}'.format(self.money).encode()))
         sleep(0.1)
 
-    def idle(self):
-        """Print text while idle."""
+    def idle(self) -> None:
+        """Print text while idling."""
         self.ser_arduino.write(b'Waiting for')
         sleep(0.1)
         self.ser_arduino.write(b'matches')
 
-    def changestatus(self, status):
+    def change_status(self, status: str) -> None:
         """
         Change Messenger behavior.
 
@@ -138,12 +220,12 @@ class Messenger(Thread):
         'Exploded'
         """
         self.status = status
-        self.__refresh__ = True  # Informations need to be refreshed
+        self.__refresh = True  # Informations need to be refreshed
 
-    def setkills(self, kills, heads):
-        """Set kills."""
+    def set_kills(self, kills: int, heads: int) -> None:
+        """Set the number of kills."""
         self.kills = (int(kills)-int(heads), int(heads))
 
-    def shutdown(self):
-        """Stop the messenger."""
-        self.__start__ = False
+    def shutdown(self) -> None:
+        """Stop Messenger."""
+        self.__start = False

@@ -16,45 +16,72 @@ from .tableviewer import PayloadViewerThread
 __dir__ = dirname(abspath(__file__))
 
 
-def serial_ports():
-    """List serial port names."""
-    return [port.device for port in list_ports.comports()]
-
-
 class Csgogsi(QWidget):
-    """App UI."""
+    """
+    App UI.
+
+    Attributes
+    ----------
+    comcb : QComboBox
+        Combo Box responsible for listing devices.
+    connect_btn : QPushButton
+        Button responsible for connection.
+    payload_viewer_btn : QPushButton
+        Button responsible to view the payload.
+    refresh_btn :QPushButton
+        Button responsible to refresh Serial.
+    server_thread : ServerThread
+        Server.
+
+    Methods
+    -------
+    close_all(*args, **kwargs)
+        Close everything before closing app.
+    connect()
+        Connect to COM.
+    refresh()
+        Refresh list.
+    start_payload_viewer()
+        Start Payload Viewer.
+    stop_server()
+        Stop the Server.
+    stop_payload_viewer()
+        Stop Payload Viewer.
+
+    """
 
     def __init__(self):
         """Init UI."""
         super(Csgogsi, self).__init__()
         # Widgets
-        self.serverthread = None
-        self.connectbtn = QPushButton('Connect')
-        self.connectbtn.clicked.connect(self.connect)
+        self.server_thread = None
+        self.connect_btn = QPushButton('Connect')
+        self.connect_btn.clicked.connect(self.connect)
 
         self.comcb = QComboBox()
-        self.comcb.addItems(serial_ports())
-        if serial_ports() == []:
-            self.connectbtn.setDisabled(True)
+        list_ports_device = [port.device for port in list_ports.comports()]
+        self.comcb.addItems(list_ports_device)
+        if list_ports_device == []:
+            self.connect_btn.setDisabled(True)
         else:
-            self.connectbtn.setDisabled(False)
+            self.connect_btn.setDisabled(False)
 
-        self.refreshbtn = QPushButton('Refresh')
-        self.refreshbtn.resize(self.refreshbtn.sizeHint())
-        self.refreshbtn.clicked.connect(self.refresh)
+        self.refresh_btn = QPushButton('Refresh')
+        self.refresh_btn.resize(self.refresh_btn.sizeHint())
+        self.refresh_btn.clicked.connect(self.refresh)
 
-        self.payloadviewerbtn = QPushButton('View payload')
-        self.payloadviewerbtn.setDisabled(True)
+        self.payload_viewer_btn = QPushButton('View payload')
+        self.payload_viewer_btn.setDisabled(True)
 
         # Container
         vbox = QVBoxLayout()
         hbox = QHBoxLayout()
         vbox.addStretch(1)
         hbox.addWidget(self.comcb)
-        hbox.addWidget(self.refreshbtn)
+        hbox.addWidget(self.refresh_btn)
         vbox.addLayout(hbox)
-        vbox.addWidget(self.payloadviewerbtn)
-        vbox.addWidget(self.connectbtn)
+        vbox.addWidget(self.payload_viewer_btn)
+        vbox.addWidget(self.connect_btn)
         self.setLayout(vbox)
         # Icon
         app_icon = QIcon()
@@ -88,86 +115,87 @@ class Csgogsi(QWidget):
     def refresh(self):
         """Refresh COM ports."""
         self.comcb.clear()
-        self.comcb.addItems(serial_ports())
-        if serial_ports() == []:
-            self.connectbtn.setDisabled(True)
+        list_ports_device = [port.device for port in list_ports.comports()]
+        self.comcb.addItems(list_ports_device)
+        if list_ports_device == []:
+            self.connect_btn.setDisabled(True)
         else:
-            self.connectbtn.setDisabled(False)
+            self.connect_btn.setDisabled(False)
 
     @Slot()
     def connect(self):
         """Connect to the server."""
         # Disable buttons
         self.comcb.setDisabled(True)
-        self.connectbtn.setDisabled(True)
-        self.refreshbtn.setDisabled(True)
+        self.connect_btn.setDisabled(True)
+        self.refresh_btn.setDisabled(True)
         # Server start
-        if self.serverthread is None:
-            self.serverthread = ServerThread(str(self.comcb.currentText()))
-        self.serverthread.start()
+        if self.server_thread is None:
+            self.server_thread = ServerThread(str(self.comcb.currentText()))
+        self.server_thread.start()
         # Change connect button's function to "stop"
-        self.connectbtn.clicked.disconnect()
-        self.connectbtn.clicked.connect(self.stop)
-        self.connectbtn.setDisabled(False)
-        self.connectbtn.setText('Stop')
+        self.connect_btn.clicked.disconnect()
+        self.connect_btn.clicked.connect(self.stop_server)
+        self.connect_btn.setDisabled(False)
+        self.connect_btn.setText('Stop')
         # Enable payloadviewer
-        self.payloadviewerbtn.clicked.connect(self.startpayloadviewer)
-        self.payloadviewerbtn.setDisabled(False)
+        self.payload_viewer_btn.clicked.connect(self.start_payload_viewer)
+        self.payload_viewer_btn.setDisabled(False)
 
     @Slot()
-    def stop(self):
+    def stop_server(self):
         """Stop the server."""
         # Disable buttons
-        self.payloadviewerbtn.setDisabled(True)
+        self.payload_viewer_btn.setDisabled(True)
         # Kill the messenger and server
-        self.serverthread.server.messenger.shutdown()
-        if self.serverthread.server.payloadviewer is not None \
-           and self.serverthread.server.payloadviewer.is_alive():
-            self.serverthread.server.payloadviewer.shutdown()
-            self.serverthread.server.payloadviewer = None
-        self.serverthread.server.shutdown()
-        self.serverthread = None
+        self.server_thread.server.messenger.shutdown()
+        if self.server_thread.server.payloadviewer is not None \
+           and self.server_thread.server.payloadviewer.is_alive():
+            self.server_thread.server.payloadviewer.shutdown()
+            self.server_thread.server.payloadviewer = None
+        self.server_thread.server.shutdown()
+        self.server_thread = None
         # Change button function
-        self.connectbtn.clicked.disconnect()
-        self.connectbtn.clicked.connect(self.connect)
-        self.connectbtn.setText('Connect')
-        self.payloadviewerbtn.clicked.disconnect()
-        self.payloadviewerbtn.clicked.connect(self.startpayloadviewer)
-        self.payloadviewerbtn.setText('View payload')
+        self.connect_btn.clicked.disconnect()
+        self.connect_btn.clicked.connect(self.connect)
+        self.connect_btn.setText('Connect')
+        self.payload_viewer_btn.clicked.disconnect()
+        self.payload_viewer_btn.clicked.connect(self.start_payload_viewer)
+        self.payload_viewer_btn.setText('View payload')
         # Enable buttons
         self.comcb.setDisabled(False)
-        self.connectbtn.setDisabled(False)
-        self.refreshbtn.setDisabled(False)
+        self.connect_btn.setDisabled(False)
+        self.refresh_btn.setDisabled(False)
 
     @Slot()
-    def startpayloadviewer(self):
-        """Stop the server."""
+    def start_payload_viewer(self):
+        """Start Payload Viewer."""
         # Start payload vierwer
-        self.serverthread.server.payloadviewer = PayloadViewerThread()
-        self.serverthread.server.payloadviewer.start()
+        self.server_thread.server.payloadviewer = PayloadViewerThread()
+        self.server_thread.server.payloadviewer.start()
 
         # Change button function
-        self.payloadviewerbtn.clicked.disconnect()
-        self.payloadviewerbtn.clicked.connect(self.stoppayloadviewer)
-        self.payloadviewerbtn.setText('Hide payload')
+        self.payload_viewer_btn.clicked.disconnect()
+        self.payload_viewer_btn.clicked.connect(self.stop_payload_viewer)
+        self.payload_viewer_btn.setText('Hide payload')
 
     @Slot()
-    def stoppayloadviewer(self):
-        """Stop the server."""
+    def stop_payload_viewer(self):
+        """Stop Payload Viewer."""
         # Stop payload viewer
-        self.serverthread.server.payloadviewer.shutdown()
-        self.serverthread.server.payloadviewer = None
+        self.server_thread.server.payloadviewer.shutdown()
+        self.server_thread.server.payloadviewer = None
 
         # Change button function
-        self.payloadviewerbtn.clicked.disconnect()
-        self.payloadviewerbtn.clicked.connect(self.startpayloadviewer)
-        self.payloadviewerbtn.setText('View payload')
+        self.payload_viewer_btn.clicked.disconnect()
+        self.payload_viewer_btn.clicked.connect(self.start_payload_viewer)
+        self.payload_viewer_btn.setText('View payload')
 
-    def closeEvent(self, *args, **kwargs):
+    def close_all(self, *args, **kwargs):
         """Close everything before closing app."""
-        super(Csgogsi, self).closeEvent(*args, **kwargs)
-        if self.serverthread is not None \
-           and self.serverthread.server.messenger.is_alive():
-            self.serverthread.server.messenger.shutdown()
-        if self.serverthread is not None and self.serverthread.isRunning():
-            self.serverthread.server.shutdown()
+        super(Csgogsi, self).close_all(*args, **kwargs)
+        if self.server_thread is not None \
+           and self.server_thread.server.messenger.is_alive():
+            self.server_thread.server.messenger.shutdown()
+        if self.server_thread is not None and self.server_thread.isRunning():
+            self.server_thread.server.shutdown()
