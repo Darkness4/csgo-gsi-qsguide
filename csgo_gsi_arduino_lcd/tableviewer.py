@@ -19,7 +19,7 @@ class PayloadViewerThread(Thread):
         Payload from CSGO.
     refreshable : bool
         Can be refreshed.
-    start : bool
+    running : bool
         Order to run.
 
 
@@ -33,7 +33,7 @@ class PayloadViewerThread(Thread):
         Order to refresh the Payload.
     """
 
-    start = True  # Order to start/stop
+    running = True  # Order to start/stop
     refreshable = False
     __payload = None
 
@@ -43,14 +43,14 @@ class PayloadViewerThread(Thread):
 
     def run(self) -> None:
         """Print payload."""
-        while self.start:
+        while self.running:
             if self.refreshable:
                 print(dumps(self.payload, indent=4))
                 self.refreshable = False
 
     def shutdown(self) -> None:
         """Shutdown thread."""
-        self.start = False
+        self.running = False
 
     @property
     def payload(self) -> dict:

@@ -19,60 +19,52 @@ from serial import Serial
 from serial.tools import list_ports
 
 __title__ = "csgo-gsi-arduino-lcd"
-__version__ = "1.3.1"
+__version__ = "1.3.2"
 __project_url__ = 'https://github.com/Darkness4/csgo-gsi-arduino-lcd'
 __credits__ = ["tsuriga", "Darkness4"]
 
 print(__title__+" "+__version__)
 
-
-# getinfo.py
-def get_round_phase(payload):
-    """Get round phase."""
-    if 'round' in payload and 'phase' in payload['round']:
-        return payload['round']['phase']
-
-
-def get_state(payload):
-    """Get player status."""
-    if 'player' in payload and 'state' in payload['player']:
-        return {'health': payload['player']['state']['health'],
-                'armor': payload['player']['state']['armor'],
-                'round_kills': payload['player']['state']['round_kills'],
-                'round_killhs': payload['player']['state']['round_killhs'],
-                'money': payload['player']['state']['money']}
-
-
-def get_bomb(payload):
-    """Get bomb status."""
-    if 'round' in payload and 'bomb' in payload['round']:
-        return payload['round']['bomb']
-
-
-def serial_ports():
-    """List serial port names."""
-    return [port.device for port in list_ports.comports()]
-
-
 # httpserver.py
-class MyServer(HTTPServer):
+class HTTPCSGOServer(HTTPServer):
     """Server storing CSGO's information."""
+    def __init__(self, ser_arduino, *args, **kwargs) -> None:
+        """
+        You can store states over multiple requests in the server.
 
-    def init_state(self, ser_arduino):
-        """You can store states over multiple requests in the server."""
+        Parameters
+        ----------
+        ser_arduino : Serial
+            Arduino in Serial.
+
+        """
+        # HTTPServer.__init__(self, *args, **kwargs)
+        super(HTTPCSGOServer, self).__init__(*args, **kwargs)
         self.round_phase = None
         self.bomb = None
         self.state = None
-        self.waiting = False
-        self.payloadviewer = None
+        self.is_waiting = False
+        self.payload_viewer = None
         self.ser_arduino = ser_arduino
         self.messenger = Messenger(ser_arduino)
         self.messenger.start()
         print(asctime(), '-', "Messenger is online.")
 
 
-class MyRequestHandler(BaseHTTPRequestHandler):
-    """CSGO's requests handler."""
+class CSGORequestHandler(BaseHTTPRequestHandler):
+    """
+    CSGO's requests handler.
+
+    Methods
+    -------
+    do_POST()
+        Receive CSGO's informations.
+    parse_payload(payload: dict)
+        Search payload and execute arduino's codes.
+    log_message(self, format, *args)
+        Prevent requests from printing into the console.
+
+    """
 
     def do_POST(self):
         """Receive CSGO's informations."""
@@ -86,72 +78,111 @@ class MyRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     # Parsing and actions
-    def parse_payload(self, payload):
-        """Search payload and execute arduino's codes."""
-        round_phase = get_round_phase(payload)
+    def parse_payload(self, payload: dict) -> None:
+        """
+        Search payload and execute arduino's codes.
+
+        Parameters
+        ----------
+        payload : dict
+            Payload containing all CSGO's informations.
+
+        """
+        round_phase = None
+        if 'round' in payload and 'phase' in payload['round']:
+            round_phase = payload['round']['phase']
 
         if round_phase is not None:
-            self.server.waiting = False
-            bomb = get_bomb(payload)
-            state = get_state(payload)
+            self.server.is_waiting = False
+            bomb = None
+            state = None
+
+            if 'round' in payload and 'bomb' in payload['round']:
+                bomb = payload['round']['bomb']
+
+            if 'player' in payload and 'state' in payload['player']:
+                state = {'health': payload['player']['state']['health'],
+                         'armor': payload['player']['state']['armor'],
+                         'round_kills': payload['player']['state']['round_kills'],
+                         'round_killhs': payload['player']['state']['round_killhs'],
+                         'money': payload['player']['state']['money']}
+
             if bomb != self.server.bomb:
                 self.server.bomb = bomb
                 if bomb == 'planted':
-                    self.server.messenger.changestatus("Bomb")
+                    self.server.messenger.status = "Bomb"
                 elif bomb == 'defused':
-                    self.server.messenger.changestatus("Defused")
+                    self.server.messenger.status = "Defused"
                 elif bomb == 'exploded':
-                    self.server.messenger.changestatus("Exploded")
+                    self.server.messenger.status = "Exploded"
                 else:
-                    self.server.messenger.changestatus("None")
+                    self.server.messenger.status = "None"
             elif state != self.server.state:  # if the state has changed
-                self.server.messenger.changestatus("!Freezetime")
+                self.server.messenger.status = "!Freezetime"
                 self.server.state = state  # Gather player's state
                 # Progress bar HP AM
                 self.server.messenger.health = int(state['health'])
                 self.server.messenger.armor = int(state['armor'])
                 self.server.messenger.money = int(state['money'])
-                self.server.messenger.setkills(state['round_kills'],
+                self.server.messenger.kills = (state['round_kills'],
                                                state['round_killhs'])
                 if round_phase != 'freezetime':
-                    self.server.messenger.changestatus("!Freezetime")
+                    self.server.messenger.status = "!Freezetime"
                 else:  # Not kill streak
-                    self.server.messenger.changestatus("Freezetime")
-        elif not self.server.waiting:
-            self.server.waiting = True  # isWaiting
-            self.server.messenger.changestatus("None")
+                    self.server.messenger.status = "Freezetime"
+        elif not self.server.is_waiting:
+            self.server.is_waiting = True  # is_waiting
+            self.server.messenger.status = "None"
 
         #  Start the payload viewer
-        if self.server.payloadviewer is not None \
-           and payload != self.server.payloadviewer.payload:
-            self.server.payloadviewer.setpayload(payload)
-            self.server.payloadviewer.refresh()
+        if self.server.payload_viewer is not None \
+           and payload != self.server.payload_viewer.payload:
+            self.server.payload_viewer.payload = payload
+            self.server.payload_viewer.refresh()
 
-    def log_message(self, format, *args):
+    def log_message(self, format, *args) -> None:
         """Prevent requests from printing into the console."""
         return
 
 
 # server.py
 class ServerThread(QThread):
-    """Server's thread."""
+    """
+    Server's thread.
+
+    Attributes
+    ----------
+    com_str : str
+        COM Port in str.
+    ser_arduino : Serial
+        Status of Messenger.
+    server : Server
+        Status of the refresher.
+
+    Methods
+    -------
+    run()
+        Start the Thread and run Server.
+
+    """
 
     ser_arduino = None
     server = None
 
-    def __init__(self, com_str):
+    def __init__(self, com_str) -> None:
         """Start thread and save the COM port."""
         QThread.__init__(self)
         self.com_str = com_str
 
-    def run(self):
+    def run(self) -> None:
         """Start the server."""
         self.ser_arduino = Serial(self.com_str, 9600)
         sleep(2)  # Wait for arduino
         print(asctime(), '-', "Arduino detected")
         # Launch server
-        self.server = MyServer(('localhost', 3000), MyRequestHandler)
-        self.server.init_state(self.ser_arduino)  # Init var
+        self.server = HTTPCSGOServer(self.ser_arduino,
+                                     ('localhost', 3000),
+                                     CSGORequestHandler)
         print(asctime(), '-', 'CS:GO GSI Quick Start server starting')
         self.server.serve_forever()  # Run
         self.server.server_close()  # Close server
@@ -160,41 +191,73 @@ class ServerThread(QThread):
         print(asctime(), '-', 'Serial stopped')
 
 
-# appui.py
+# appui.py (without icon)
 class Csgogsi(QWidget):
-    """App UI."""
+    """
+    App UI.
 
-    def __init__(self):
+    Attributes
+    ----------
+    comcb : QComboBox
+        Combo Box responsible for listing devices.
+    connect_btn : QPushButton
+        Button responsible for connection.
+    payload_viewer_btn : QPushButton
+        Button responsible to view the payload.
+    refresh_btn :QPushButton
+        Button responsible to refresh Serial.
+    server_thread : ServerThread
+        Server.
+
+    Methods
+    -------
+    close_all(*args, **kwargs)
+        Close everything before closing app.
+    connect()
+        Connect to COM.
+    refresh()
+        Refresh list.
+    start_payload_viewer()
+        Start Payload Viewer.
+    stop_server()
+        Stop the Server.
+    stop_payload_viewer()
+        Stop Payload Viewer.
+
+    """
+
+    def __init__(self) -> None:
         """Init UI."""
         super(Csgogsi, self).__init__()
         # Widgets
-        self.serverthread = None
-        self.connectbtn = QPushButton('Connect')
-        self.connectbtn.clicked.connect(self.connect)
+        self.server_thread = None
+        self.connect_btn = QPushButton('Connect')
+        self.connect_btn.clicked.connect(self.connect)
 
         self.comcb = QComboBox()
-        self.comcb.addItems(serial_ports())
-        if serial_ports() == []:
-            self.connectbtn.setDisabled(True)
+        list_ports_device = [port.device for port in list_ports.comports()]
+        self.comcb.addItems(list_ports_device)
+        if list_ports_device == []:
+            self.connect_btn.setDisabled(True)
         else:
-            self.connectbtn.setDisabled(False)
+            self.connect_btn.setDisabled(False)
 
-        self.refreshbtn = QPushButton('Refresh')
-        self.refreshbtn.resize(self.refreshbtn.sizeHint())
-        self.refreshbtn.clicked.connect(self.refresh)
+        self.refresh_btn = QPushButton('Refresh')
+        self.refresh_btn.resize(self.refresh_btn.sizeHint())
+        self.refresh_btn.clicked.connect(self.refresh)
 
-        self.payloadviewerbtn = QPushButton('View payload')
-        self.payloadviewerbtn.setDisabled(True)
+        self.payload_viewer_btn = QPushButton('View payload')
+        self.payload_viewer_btn.setDisabled(True)
 
         # Container
         vbox = QVBoxLayout()
         hbox = QHBoxLayout()
         vbox.addStretch(1)
         hbox.addWidget(self.comcb)
-        hbox.addWidget(self.refreshbtn)
+        hbox.addWidget(self.refresh_btn)
         vbox.addLayout(hbox)
-        vbox.addWidget(self.payloadviewerbtn)
-        vbox.addWidget(self.connectbtn)
+        vbox.addWidget(self.payload_viewer_btn)
+        vbox.addWidget(self.connect_btn)
         self.setLayout(vbox)
         # Window
         self.setWindowTitle('CSGO GSI on LCD')
@@ -204,97 +267,110 @@ class Csgogsi(QWidget):
         self.setFixedSize(self.size())
 
     @Slot()
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh COM ports."""
         self.comcb.clear()
-        self.comcb.addItems(serial_ports())
-        if serial_ports() == []:
-            self.connectbtn.setDisabled(True)
+        list_ports_device = [port.device for port in list_ports.comports()]
+        self.comcb.addItems(list_ports_device)
+        if list_ports_device == []:
+            self.connect_btn.setDisabled(True)
         else:
-            self.connectbtn.setDisabled(False)
+            self.connect_btn.setDisabled(False)
 
     @Slot()
-    def connect(self):
+    def connect(self) -> None:
         """Connect to the server."""
         # Disable buttons
         self.comcb.setDisabled(True)
-        self.connectbtn.setDisabled(True)
-        self.refreshbtn.setDisabled(True)
+        self.connect_btn.setDisabled(True)
+        self.refresh_btn.setDisabled(True)
         # Server start
-        if self.serverthread is None:
-            self.serverthread = ServerThread(str(self.comcb.currentText()))
-        self.serverthread.start()
+        if self.server_thread is None:
+            self.server_thread = ServerThread(str(self.comcb.currentText()))
+        self.server_thread.start()
         # Change connect button's function to "stop"
-        self.connectbtn.clicked.disconnect()
-        self.connectbtn.clicked.connect(self.stop)
-        self.connectbtn.setDisabled(False)
-        self.connectbtn.setText('Stop')
-        # Enable payloadviewer
-        self.payloadviewerbtn.clicked.connect(self.startpayloadviewer)
-        self.payloadviewerbtn.setDisabled(False)
+        self.connect_btn.clicked.disconnect()
+        self.connect_btn.clicked.connect(self.stop_server)
+        self.connect_btn.setDisabled(False)
+        self.connect_btn.setText('Stop')
+        # Enable payload_viewer
+        self.payload_viewer_btn.clicked.connect(self.start_payload_viewer)
+        self.payload_viewer_btn.setDisabled(False)
 
     @Slot()
-    def stop(self):
+    def stop_server(self) -> None:
         """Stop the server."""
         # Disable buttons
-        self.payloadviewerbtn.setDisabled(True)
+        self.payload_viewer_btn.setDisabled(True)
         # Kill the messenger and server
-        self.serverthread.server.messenger.shutdown()
-        if self.serverthread.server.payloadviewer is not None \
-           and self.serverthread.server.payloadviewer.is_alive():
-            self.serverthread.server.payloadviewer.shutdown()
-            self.serverthread.server.payloadviewer = None
-        self.serverthread.server.shutdown()
-        self.serverthread = None
+        self.server_thread.server.messenger.shutdown()
+        if self.server_thread.server.payload_viewer is not None \
+           and self.server_thread.server.payload_viewer.is_alive():
+            self.server_thread.server.payload_viewer.shutdown()
+            self.server_thread.server.payload_viewer = None
+        self.server_thread.server.shutdown()
+        self.server_thread = None
         # Change button function
-        self.connectbtn.clicked.disconnect()
-        self.connectbtn.clicked.connect(self.connect)
-        self.connectbtn.setText('Connect')
-        self.payloadviewerbtn.clicked.disconnect()
-        self.payloadviewerbtn.clicked.connect(self.startpayloadviewer)
-        self.payloadviewerbtn.setText('View payload')
+        self.connect_btn.clicked.disconnect()
+        self.connect_btn.clicked.connect(self.connect)
+        self.connect_btn.setText('Connect')
+        self.payload_viewer_btn.clicked.disconnect()
+        self.payload_viewer_btn.clicked.connect(self.start_payload_viewer)
+        self.payload_viewer_btn.setText('View payload')
         # Enable buttons
         self.comcb.setDisabled(False)
-        self.connectbtn.setDisabled(False)
-        self.refreshbtn.setDisabled(False)
+        self.connect_btn.setDisabled(False)
+        self.refresh_btn.setDisabled(False)
 
     @Slot()
-    def startpayloadviewer(self):
-        """Stop the server."""
+    def start_payload_viewer(self) -> None:
+        """Start Payload Viewer."""
         # Start payload vierwer
-        self.serverthread.server.payloadviewer = PayloadViewerThread()
-        self.serverthread.server.payloadviewer.start()
+        self.server_thread.server.payload_viewer = PayloadViewerThread()
+        self.server_thread.server.payload_viewer.start()
 
         # Change button function
-        self.payloadviewerbtn.clicked.disconnect()
-        self.payloadviewerbtn.clicked.connect(self.stoppayloadviewer)
-        self.payloadviewerbtn.setText('Hide payload')
+        self.payload_viewer_btn.clicked.disconnect()
+        self.payload_viewer_btn.clicked.connect(self.stop_payload_viewer)
+        self.payload_viewer_btn.setText('Hide payload')
 
     @Slot()
-    def stoppayloadviewer(self):
-        """Stop the server."""
+    def stop_payload_viewer(self) -> None:
+        """Stop Payload Viewer."""
         # Stop payload viewer
-        self.serverthread.server.payloadviewer.shutdown()
-        self.serverthread.server.payloadviewer = None
+        self.server_thread.server.payload_viewer.shutdown()
+        self.server_thread.server.payload_viewer = None
 
         # Change button function
-        self.payloadviewerbtn.clicked.disconnect()
-        self.payloadviewerbtn.clicked.connect(self.startpayloadviewer)
-        self.payloadviewerbtn.setText('View payload')
+        self.payload_viewer_btn.clicked.disconnect()
+        self.payload_viewer_btn.clicked.connect(self.start_payload_viewer)
+        self.payload_viewer_btn.setText('View payload')
 
-    def closeEvent(self, *args, **kwargs):
+    def close_all(self, *args, **kwargs) -> None:
         """Close everything before closing app."""
-        super(Csgogsi, self).closeEvent(*args, **kwargs)
-        if self.serverthread is not None \
-           and self.serverthread.server.messenger.is_alive():
-            self.serverthread.server.messenger.shutdown()
-        if self.serverthread is not None and self.serverthread.isRunning():
-            self.serverthread.server.shutdown()
+        super(Csgogsi, self).close_all(*args, **kwargs)
+        if self.server_thread is not None \
+           and self.server_thread.server.messenger.is_alive():
+            self.server_thread.server.messenger.shutdown()
+        if self.server_thread is not None and self.server_thread.isRunning():
+            self.server_thread.server.shutdown()
 
 
 # messenger.py
-def progress(i):
-    """Progress bar, for arduino 5px large."""
+def progress(i: int) -> bytes:
+    """
+    Progress bar, for arduino 5px large.
+
+    Parameters
+    ----------
+    i : int
+        Select which character to send to Arduino.
+
+    Returns
+    -------
+    bytes : Character send to Arduino.
+
+    """
     switcher = {i <= 0: b"\x07",
                 i == 1: b"\x02",
                 i == 2: b"\x03",
@@ -305,39 +381,135 @@ def progress(i):
 
 
 class Messenger(Thread):
-    """Give order to the arduino."""
+    """
+    Give order to the arduino.
 
-    __start__ = True  # Order to start/stop
-    __refresh__ = False  # Order to refresh informations
-    health = None
-    armor = None
-    money = None
-    kills = None  # tuple (total kills - hs, hs)
-    status = "None"
+    Attributes
+    ----------
+    __armor : int
+        Armor points.
+    __health : int
+        Health points.
+    __kills : tuple
+        Number of kills and heads.
+    __money : int
+        Money left.
+    __refresh : bool
+        Status of the refresher.
+    __start : bool
+        Status of Messenger.
+    __status : string
+        Status of the round.
+    ser_arduino : Serial
+        Serial class of the Arduino.
 
-    def __init__(self, ser_arduino):
+    Methods
+    -------
+    bomb_timer()
+        Start a bomb timer.
+    idle()
+        Put Messenger on idle and write a message.
+    run()
+        Start the Thread and run Messenger.
+    shutdown()
+        Shutdown Messenger.
+    write_player_stats()
+        Write the player stats on Arduino.
+
+    """
+    __armor = None
+    __health = None
+    __kills = None  # tuple (total kills - hs, hs)
+    __money = None
+    __refresh = False  # Order to refresh informations
+    __start = True  # Order to start/stop
+    __status = "None"
+
+    def __init__(self, ser_arduino) -> None:
         """Init save."""
         super(Messenger, self).__init__()
         self.ser_arduino = ser_arduino
 
-    def run(self):
+    @property
+    def armor(self) -> int:
+        """Get the armor."""
+        return self.__armor
+
+    @armor.setter
+    def armor(self, armor: int) -> None:
+        """Set the armor."""
+        self.__armor = armor
+
+    @property
+    def money(self) -> int:
+        """Get the money."""
+        return self.__money
+
+    @money.setter
+    def money(self, money: int) -> None:
+        """Set the money."""
+        self.__money = money
+
+    @property
+    def health(self) -> int:
+        """Get the health."""
+        return self.__health
+
+    @health.setter
+    def health(self, health: int) -> None:
+        """Set the health."""
+        self.__health = health
+
+    @property
+    def status(self) -> str:
+        """Get the status."""
+        return self.__status
+
+    @status.setter
+    def status(self, status: str) -> None:
+        """
+        Change Messenger behavior.
+
+        Available status:
+        'None'
+        'Bomb'
+        '!Freezetime'
+        'Freezetime'
+        'Defused'
+        'Exploded'
+        """
+        self.__status = status
+        self.__refresh = True  # Informations need to be refreshed
+
+    @property
+    def kills(self) -> tuple:
+        """Get the kills (K, HS)."""
+        return self.__kills
+
+    @kills.setter
+    def kills(self, kills_heads: tuple) -> None:
+        """Set the number of kills (K, HS)."""
+        self.__kills = (int(kills_heads[0])-int(kills_heads[1]),
+                        int(kills_heads[1]))
+
+    def run(self) -> None:
         """Thread start."""
-        while self.__start__:
-            if self.__refresh__:
-                self.__refresh__ = False  # Has refreshed
+        while self.__start:
+            if self.__refresh:
+                self.__refresh = False  # Has refreshed
                 if self.status in ("Bomb", "Defused", "Exploded"):  # Bomb
-                    self.bombtimer()
+                    self.bomb_timer()
 
                 elif self.status == "None":
                     self.idle()
 
                 else:  # Default status
-                    self.playerstats()
+                    self.write_player_stats()
             else:
                 sleep(0.1)  # Saving consumption
         print(asctime(), "-", "Messenger is dead.")
 
-    def bombtimer(self):
+    def bomb_timer(self) -> None:
         """40 sec bomb timer on arduino."""
         offset = time()
         actualtime = 40 - time() + offset
@@ -372,11 +544,13 @@ class Messenger(Thread):
             self.ser_arduino.write(b' ')
             sleep(0.1)
 
-    def playerstats(self):
+    def write_player_stats(self) -> None:
         """Player stats writer."""
         # Not too fast
         sleep(0.1)
-        self.ser_arduino.write(b'H: ')  # Writing health and armor in Serial
+
+        # Writing health and armor in Serial
+        self.ser_arduino.write(b'H: ')
         self.ser_arduino.write(progress(int(self.health / 5)))
         self.ser_arduino.write(progress(int((self.health - 25) / 5)))
         self.ser_arduino.write(progress(int((self.health - 50) / 5)))
@@ -394,76 +568,84 @@ class Messenger(Thread):
         if self.status == "!Freezetime":
             # HS and Kill counter
             self.ser_arduino.write(b'K: ')
-            for _ in range(0, self.kills[0]):  # counting
+            for _ in range(self.kills[0]):  # counting
                 self.ser_arduino.write(b'\x00')  # Byte 0 char : kill no HS
-            for _ in range(0, self.kills[1]):  # counting
+            for _ in range(self.kills[1]):  # counting
                 self.ser_arduino.write(b'\x01')  # Byte 1 char : HS
-
-        elif self.status == "Freezetime":  # Not kill streak
+        # Not kill streak
+        elif self.status == "Freezetime":
             self.ser_arduino.write(
                 bytes('M: {}'.format(self.money).encode()))
         sleep(0.1)
 
-    def idle(self):
-        """Print text while idle."""
+    def idle(self) -> None:
+        """Print text while idling."""
         self.ser_arduino.write(b'Waiting for')
         sleep(0.1)
         self.ser_arduino.write(b'matches')
 
-    def changestatus(self, status):
-        """
-        Change Messenger behavior.
-
-        Available status:
-        'None'
-        'Bomb'
-        '!Freezetime'
-        'Freezetime'
-        'Defused'
-        'Exploded'
-        """
-        self.status = status
-        self.__refresh__ = True  # Informations need to be refreshed
-
-    def setkills(self, kills, heads):
-        """Set kills."""
-        self.kills = (int(kills)-int(heads), int(heads))
-
-    def shutdown(self):
-        """Stop the messenger."""
-        self.__start__ = False
+    def shutdown(self) -> None:
+        """Stop Messenger."""
+        self.__start = False
 
 
 # tableviewer.py
 class PayloadViewerThread(Thread):
-    """CSGO's requests handler."""
+    """
+    Payload Viewer.
 
-    __start__ = True  # Order to start/stop
-    __refresh__ = False
-    payload = None
+    Attributes
+    ----------
+    __payload : dict
+        Payload from CSGO.
+    refreshable : bool
+        Can be refreshed.
+    running : bool
+        Order to run.
 
-    def __init__(self):
+
+    Methods
+    -------
+    run()
+        Start the Thread and run Payload Viewer.
+    shutdown()
+        Shutdown the Payload Viewer.
+    refresh()
+        Order to refresh the Payload.
+    """
+
+    running = True  # Order to start/stop
+    refreshable = False
+    __payload = None
+
+    def __init__(self) -> None:
         """Start thread."""
         super(PayloadViewerThread, self).__init__()
 
-    def run(self):
+    def run(self) -> None:
         """Print payload."""
-        while self.__start__:
-            if self.__refresh__:
+        while self.running:
+            if self.refreshable:
                 print(dumps(self.payload, indent=4))
-                self.__refresh__ = False
+                self.refreshable = False
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown thread."""
-        self.__start__ = False
+        self.running = False
 
-    def setpayload(self, payload):
-        """Update payload."""
-        self.payload = payload
+    @property
+    def payload(self) -> dict:
+        """Get the payload."""
+        return self.__payload
 
-    def refresh(self):
+    @payload.setter
+    def payload(self, payload: dict) -> None:
+        """Set the payload."""
+        self.__payload = payload
+
+    def refresh(self) -> None:
         """Refresh."""
-        self.__refresh__ = True
+        self.refreshable = True
 
 
 if __name__ == '__main__':
