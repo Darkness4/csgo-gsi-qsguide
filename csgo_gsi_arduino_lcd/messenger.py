@@ -41,31 +41,27 @@ class Messenger(Thread):
         Armor points.
     __health : int
         Health points.
+    __kills : tuple
+        Number of kills and heads.
     __money : int
         Money left.
     __refresh : bool
         Status of the refresher.
     __start : bool
         Status of Messenger.
-    kills : tuple
-        Number of kills and heads.
+    __status : string
+        Status of the round.
     ser_arduino : Serial
         Serial class of the Arduino.
-    status : string
-        Status of the round.
 
     Methods
     -------
     bomb_timer()
         Start a bomb timer.
-    change_status(status: str)
-        Change Messenger behavior.
     idle()
         Put Messenger on idle and write a message.
     run()
         Start the Thread and run Messenger.
-    set_kills(kills: int, heads: int)
-        Set the number of kills.
     shutdown()
         Shutdown Messenger.
     write_player_stats()
@@ -74,11 +70,11 @@ class Messenger(Thread):
     """
     __armor = None
     __health = None
+    __kills = None  # tuple (total kills - hs, hs)
     __money = None
     __refresh = False  # Order to refresh informations
     __start = True  # Order to start/stop
-    kills = None  # tuple (total kills - hs, hs)
-    status = "None"
+    __status = "None"
 
     def __init__(self, ser_arduino) -> None:
         """Init save."""
@@ -114,6 +110,38 @@ class Messenger(Thread):
     def health(self, health: int) -> None:
         """Set the health."""
         self.__health = health
+
+    @property
+    def status(self) -> str:
+        """Get the health."""
+        return self.__status
+
+    @status.setter
+    def status(self, status: str) -> None:
+        """
+        Change Messenger behavior.
+
+        Available status:
+        'None'
+        'Bomb'
+        '!Freezetime'
+        'Freezetime'
+        'Defused'
+        'Exploded'
+        """
+        self.__status = status
+        self.__refresh = True  # Informations need to be refreshed
+
+    @property
+    def kills(self) -> int:
+        """Get the health."""
+        return self.__kills
+
+    @kills.setter
+    def kills(self, kills_heads: tuple) -> None:
+        """Set the number of kills (K, HS)."""
+        self.__kills = (int(kills_heads[0])-int(kills_heads[1]),
+                        int(kills_heads[1]))
 
     def run(self) -> None:
         """Thread start."""
@@ -191,9 +219,9 @@ class Messenger(Thread):
         if self.status == "!Freezetime":
             # HS and Kill counter
             self.ser_arduino.write(b'K: ')
-            for _ in range(0, self.kills[0]):  # counting
+            for _ in range(self.kills[0]):  # counting
                 self.ser_arduino.write(b'\x00')  # Byte 0 char : kill no HS
-            for _ in range(0, self.kills[1]):  # counting
+            for _ in range(self.kills[1]):  # counting
                 self.ser_arduino.write(b'\x01')  # Byte 1 char : HS
         # Not kill streak
         elif self.status == "Freezetime":
@@ -206,25 +234,6 @@ class Messenger(Thread):
         self.ser_arduino.write(b'Waiting for')
         sleep(0.1)
         self.ser_arduino.write(b'matches')
-
-    def change_status(self, status: str) -> None:
-        """
-        Change Messenger behavior.
-
-        Available status:
-        'None'
-        'Bomb'
-        '!Freezetime'
-        'Freezetime'
-        'Defused'
-        'Exploded'
-        """
-        self.status = status
-        self.__refresh = True  # Informations need to be refreshed
-
-    def set_kills(self, kills: int, heads: int) -> None:
-        """Set the number of kills."""
-        self.kills = (int(kills)-int(heads), int(heads))
 
     def shutdown(self) -> None:
         """Stop Messenger."""

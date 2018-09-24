@@ -10,7 +10,7 @@ from time import asctime, sleep
 from qtpy.QtCore import QThread
 from serial import Serial
 
-from .httpserver import MyRequestHandler, MyServer
+from .httpserver import CSGORequestHandler, HTTPCSGOServer
 
 
 class ServerThread(QThread):
@@ -47,7 +47,9 @@ class ServerThread(QThread):
         sleep(2)  # Wait for arduino
         print(asctime(), '-', "Arduino detected")
         # Launch server
-        self.server = MyServer(self.ser_arduino, ('localhost', 3000), MyRequestHandler)
+        self.server = HTTPCSGOServer(self.ser_arduino,
+                                     ('localhost', 3000),
+                                     CSGORequestHandler)
         print(asctime(), '-', 'CS:GO GSI Quick Start server starting')
         self.server.serve_forever()  # Run
         self.server.server_close()  # Close server

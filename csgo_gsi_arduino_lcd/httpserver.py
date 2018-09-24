@@ -10,7 +10,7 @@ from time import asctime
 from .messenger import Messenger
 
 
-class MyServer(HTTPServer):
+class HTTPCSGOServer(HTTPServer):
     """Server storing CSGO's information."""
     def __init__(self, ser_arduino, *args, **kwargs) -> None:
         """
@@ -23,19 +23,19 @@ class MyServer(HTTPServer):
 
         """
         # HTTPServer.__init__(self, *args, **kwargs)
-        super(MyServer, self).__init__(*args, **kwargs)
+        super(HTTPCSGOServer, self).__init__(*args, **kwargs)
         self.round_phase = None
         self.bomb = None
         self.state = None
         self.is_waiting = False
-        self.payloadviewer = None
+        self.payload_viewer = None
         self.ser_arduino = ser_arduino
         self.messenger = Messenger(ser_arduino)
         self.messenger.start()
         print(asctime(), '-', "Messenger is online.")
 
 
-class MyRequestHandler(BaseHTTPRequestHandler):
+class CSGORequestHandler(BaseHTTPRequestHandler):
     """
     CSGO's requests handler.
 
@@ -79,6 +79,8 @@ class MyRequestHandler(BaseHTTPRequestHandler):
         if round_phase is not None:
             self.server.is_waiting = False
             bomb = None
+            state = None
+
             if 'round' in payload and 'bomb' in payload['round']:
                 bomb = payload['round']['bomb']
 
@@ -92,35 +94,35 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             if bomb != self.server.bomb:
                 self.server.bomb = bomb
                 if bomb == 'planted':
-                    self.server.messenger.change_status("Bomb")
+                    self.server.messenger.status = "Bomb"
                 elif bomb == 'defused':
-                    self.server.messenger.change_status("Defused")
+                    self.server.messenger.status = "Defused"
                 elif bomb == 'exploded':
-                    self.server.messenger.change_status("Exploded")
+                    self.server.messenger.status = "Exploded"
                 else:
-                    self.server.messenger.change_status("None")
+                    self.server.messenger.status = "None"
             elif state != self.server.state:  # if the state has changed
-                self.server.messenger.change_status("!Freezetime")
+                self.server.messenger.status = "!Freezetime"
                 self.server.state = state  # Gather player's state
                 # Progress bar HP AM
                 self.server.messenger.health = int(state['health'])
                 self.server.messenger.armor = int(state['armor'])
                 self.server.messenger.money = int(state['money'])
-                self.server.messenger.set_kills(state['round_kills'],
-                                                state['round_killhs'])
+                self.server.messenger.kills = (state['round_kills'],
+                                               state['round_killhs'])
                 if round_phase != 'freezetime':
-                    self.server.messenger.change_status("!Freezetime")
+                    self.server.messenger.status = "!Freezetime"
                 else:  # Not kill streak
-                    self.server.messenger.change_status("Freezetime")
+                    self.server.messenger.status = "Freezetime"
         elif not self.server.is_waiting:
             self.server.is_waiting = True  # is_waiting
-            self.server.messenger.change_status("None")
+            self.server.messenger.status = "None"
 
         #  Start the payload viewer
-        if self.server.payloadviewer is not None \
-           and payload != self.server.payloadviewer.payload:
-            self.server.payloadviewer.set_payload(payload)
-            self.server.payloadviewer.refresh()
+        if self.server.payload_viewer is not None \
+           and payload != self.server.payload_viewer.payload:
+            self.server.payload_viewer.payload = payload
+            self.server.payload_viewer.refresh()
 
     def log_message(self, format, *args) -> None:
         """Prevent requests from printing into the console."""

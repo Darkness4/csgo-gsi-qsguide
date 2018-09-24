@@ -50,7 +50,7 @@ class Csgogsi(QWidget):
 
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init UI."""
         super(Csgogsi, self).__init__()
         # Widgets
@@ -112,7 +112,7 @@ class Csgogsi(QWidget):
         self.setFixedSize(self.size())
 
     @Slot()
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh COM ports."""
         self.comcb.clear()
         list_ports_device = [port.device for port in list_ports.comports()]
@@ -123,7 +123,7 @@ class Csgogsi(QWidget):
             self.connect_btn.setDisabled(False)
 
     @Slot()
-    def connect(self):
+    def connect(self) -> None:
         """Connect to the server."""
         # Disable buttons
         self.comcb.setDisabled(True)
@@ -138,21 +138,21 @@ class Csgogsi(QWidget):
         self.connect_btn.clicked.connect(self.stop_server)
         self.connect_btn.setDisabled(False)
         self.connect_btn.setText('Stop')
-        # Enable payloadviewer
+        # Enable payload_viewer
         self.payload_viewer_btn.clicked.connect(self.start_payload_viewer)
         self.payload_viewer_btn.setDisabled(False)
 
     @Slot()
-    def stop_server(self):
+    def stop_server(self) -> None:
         """Stop the server."""
         # Disable buttons
         self.payload_viewer_btn.setDisabled(True)
         # Kill the messenger and server
         self.server_thread.server.messenger.shutdown()
-        if self.server_thread.server.payloadviewer is not None \
-           and self.server_thread.server.payloadviewer.is_alive():
-            self.server_thread.server.payloadviewer.shutdown()
-            self.server_thread.server.payloadviewer = None
+        if self.server_thread.server.payload_viewer is not None \
+           and self.server_thread.server.payload_viewer.is_alive():
+            self.server_thread.server.payload_viewer.shutdown()
+            self.server_thread.server.payload_viewer = None
         self.server_thread.server.shutdown()
         self.server_thread = None
         # Change button function
@@ -168,11 +168,11 @@ class Csgogsi(QWidget):
         self.refresh_btn.setDisabled(False)
 
     @Slot()
-    def start_payload_viewer(self):
+    def start_payload_viewer(self) -> None:
         """Start Payload Viewer."""
         # Start payload vierwer
-        self.server_thread.server.payloadviewer = PayloadViewerThread()
-        self.server_thread.server.payloadviewer.start()
+        self.server_thread.server.payload_viewer = PayloadViewerThread()
+        self.server_thread.server.payload_viewer.start()
 
         # Change button function
         self.payload_viewer_btn.clicked.disconnect()
@@ -180,18 +180,18 @@ class Csgogsi(QWidget):
         self.payload_viewer_btn.setText('Hide payload')
 
     @Slot()
-    def stop_payload_viewer(self):
+    def stop_payload_viewer(self) -> None:
         """Stop Payload Viewer."""
         # Stop payload viewer
-        self.server_thread.server.payloadviewer.shutdown()
-        self.server_thread.server.payloadviewer = None
+        self.server_thread.server.payload_viewer.shutdown()
+        self.server_thread.server.payload_viewer = None
 
         # Change button function
         self.payload_viewer_btn.clicked.disconnect()
         self.payload_viewer_btn.clicked.connect(self.start_payload_viewer)
         self.payload_viewer_btn.setText('View payload')
 
-    def close_all(self, *args, **kwargs):
+    def close_all(self, *args, **kwargs) -> None:
         """Close everything before closing app."""
         super(Csgogsi, self).close_all(*args, **kwargs)
         if self.server_thread is not None \

@@ -12,29 +12,35 @@ from threading import Thread
 class PayloadViewerThread(Thread):
     """CSGO's requests handler."""
 
-    __start = True  # Order to start/stop
-    __refresh = False
-    payload = None
+    start = True  # Order to start/stop
+    refreshing = False
+    __payload = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Start thread."""
         super(PayloadViewerThread, self).__init__()
 
-    def run(self):
+    def run(self) -> None:
         """Print payload."""
-        while self.__start:
-            if self.__refresh:
+        while self.start:
+            if self.refreshing:
                 print(dumps(self.payload, indent=4))
-                self.__refresh = False
+                self.refreshing = False
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown thread."""
-        self.__start = False
+        self.start = False
 
-    def set_payload(self, payload):
-        """Update payload."""
-        self.payload = payload
+    @property
+    def payload(self) -> dict:
+        """Get the color."""
+        return self.__payload
 
-    def refresh(self):
+    @payload.setter
+    def payload(self, payload: dict) -> None:
+        """Set the payload."""
+        self.__payload = payload
+
+    def refresh(self) -> None:
         """Refresh."""
-        self.__refresh = True
+        self.refreshing = True
