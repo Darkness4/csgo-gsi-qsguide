@@ -11,6 +11,7 @@ pyqt5 = "*"
 [dev-packages]
 pylama = "*"
 black = "*"
+pyinstaller = "*"
 
 [requires]
 python_version = "3.8"

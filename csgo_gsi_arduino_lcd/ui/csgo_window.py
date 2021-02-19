@@ -20,12 +20,10 @@ from qtpy.QtWidgets import (
 from serial.tools import list_ports
 
 
-def get_exec_path():
-    try:
-        sFile = os.path.abspath(sys.modules["__main__"].__file__)
-    except Exception:
-        sFile = sys.executable
-    return os.path.dirname(sFile)
+def resource_path(relative_path: str):
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
 
 
 class CsgoWindow(QWidget):
@@ -72,7 +70,7 @@ class CsgoWindow(QWidget):
         app_icon = QIcon()
         for i in (16, 20, 24, 32, 48, 64, 128, 256, 512):
             app_icon.addFile(
-                os.path.join(get_exec_path(), f"assets/csgo-{i}.ico"),
+                resource_path(f"assets/csgo-{i}.ico"),
                 QSize(i, i),
             )
 
