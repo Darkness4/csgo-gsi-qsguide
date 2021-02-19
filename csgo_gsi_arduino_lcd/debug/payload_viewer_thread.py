@@ -5,8 +5,10 @@ Payload printer.
 @auteur: Darkness4
 """
 
-from json import dumps
+import json
+import logging
 from threading import Thread
+from typing import Optional
 
 
 class PayloadViewerThread(Thread):
@@ -35,33 +37,31 @@ class PayloadViewerThread(Thread):
 
     running = True  # Order to start/stop
     refreshable = False
-    __payload = None
+    payload: Optional[dict] = None
+    __pause = True
 
-    def __init__(self) -> None:
+    def __init__(self):
         """Start thread."""
         super(PayloadViewerThread, self).__init__()
 
-    def run(self) -> None:
+    def run(self):
         """Print payload."""
         while self.running:
-            if self.refreshable:
-                print(dumps(self.payload, indent=4))
-                self.refreshable = False
+            if not self.__pause:
+                if self.refreshable:
+                    logging.debug(json.dumps(self.payload, indent=4))
+                    self.refreshable = False
 
-    def shutdown(self) -> None:
+    def shutdown(self):
         """Shutdown thread."""
         self.running = False
 
-    @property
-    def payload(self) -> dict:
-        """Get the payload."""
-        return self.__payload
+    def pause(self):
+        self.__pause = True
 
-    @payload.setter
-    def payload(self, payload: dict) -> None:
-        """Set the payload."""
-        self.__payload = payload
+    def resume(self):
+        self.__pause = False
 
-    def refresh(self) -> None:
+    def refresh(self):
         """Refresh."""
         self.refreshable = True

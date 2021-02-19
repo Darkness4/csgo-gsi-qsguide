@@ -20,70 +20,11 @@ The informations are received by the program made in python and are shown on an 
 
 ## Requirements
 -   Arduino (tested on UNO rev3)
-
 -   Arduino LCD KeyPad Shield (tested on v1.1)
-
 -   USB Ports
+-   [Python 3.8+](https://www.python.org/downloads/)
 
-If you are not going to use Windows Binaries:
-
--   [Python 3.x](https://www.python.org/downloads/) (tested on 3.6)
-
--   pySerial package
-
-    Open a terminal:
-
-    ```sh
-    pip install pyserial
-    ```
-
-    or, if anaconda installed:
-
-    ```sh
-    conda install pyserial
-    ```
-
--   qtpy package
-
-    Open a terminal:
-
-    ```sh
-    pip install qtpy
-    ```
-
-    or, if anaconda installed:
-
-    ```sh
-    conda install qtpy
-    ```
-
--   PyQt5 or PyQt4 or PySide (tested with PyQt5)
-
-    Open a terminal:
-
-    ```sh
-    pip install PyQt5
-    ```
-
-    ```sh
-    pip install PyQt4
-    ```
-
-    ```sh
-    pip install PySide
-    ```
-
-    or, if anaconda installed:
-
-    ```sh
-    conda install pyqt
-    ```
-
-    ```sh
-    conda install pyside
-    ```
-
-### Do not forget
+### Check the pins in Arduino
 
 Verify if the pin are the good ones on the arduino program for the LCD shield. (line 10)
 
@@ -110,82 +51,41 @@ For LCD shield v1.0. Comment line 17-22 and uncomment line 24-30 in the serialse
   if (adc_key_in < 790)  return btnSELECT;
 ```
 
-## Install & Usage
+## Usage
 
-### Using portable binaries
+1. Clone/download this repository :
 
-1.  Download windows/linux portable binaries
+   ```sh
+   git clone git@github.com:Darkness4/csgo-gsi-arduino-lcd.git
+   ```
 
-1.  Move gamestate_integration_arduinotrack.cfg in Program Files (x86)\Steam\SteamApps\common\Counter-Strike Global Offensive\csgo\cfg.
+1. Move *gamestate_integration_arduinotrack.cfg* in *Counter-Strike Global Offensive\csgo\cfg*.
 
+1. Mount the LCD shield on the arduino and [push](https://www.arduino.cc/en/main/howto) the *serialsend.ino* in the arduino (remember the COM port).
 
-1.  Mount the shield on the arduino (obviously) and [push](https://www.arduino.cc/en/main/howto) the serialsend.ino in the arduino (remember the COM port)
+1. Install the dependencies:
 
-1.  Execute csgo-gsi-arduino-lcd
+   - Using pip :
 
-### Using from source
+     ```sh
+     pip install -r requirements.txt
+     ```
 
-1.  Clone/download this git
+   - Using pipenv :
 
-1.  Move gamestate_integration_arduinotrack.cfg in Program Files (x86)\Steam\SteamApps\common\Counter-Strike Global Offensive\csgo\cfg.
+     ```sh
+     pipenv install
+     pipenv shell
+     ```
 
-1.  Mount the shield on the arduino (obviously) and [push](https://www.arduino.cc/en/main/howto) the serialsend.ino in the arduino (remember the COM port).
+5. Launch CS:GO
 
-1.  Install the python program:
+6. Run the python program (choose one and make sure you have added /Python/Scripts to Path)
 
+   ```sh
+   python -m csgo_gsi_arduino_lcd
+   ```
 
-    ```sh
-    pip install .
-    ```
+7. Choose the right COM
 
-    Or manually:
-
-
-    ```sh
-    python setup.py install
-    ```
-
-1.  Launch CSGO
-
-1.  Run the python program (choose one and make sure you have added /Python/Scripts to Path)
-
-    Windows:
-
-    ```sh
-    csgogsilcd.bat
-    ```
-
-    Linux:
-
-    ```sh
-    csgogsilcd
-    ```
-
-    All:
-
-    ```sh
-    python csgogsilcd
-    ```
-
-1.  Choose the right COM
-
-1.  Play some CSGO and enjoy!
-
-## F.A.Q
-
-1.  The needed port (3000 by default) is occupied. What should i do?
-
-    Replace in csgogsi.py, '3000' which is the default port (line 195, col 33) with the new corresponding port:
-
-    ```python
-    SERVER = MyServer(('localhost', 3000), MyRequestHandler)
-    ```
-
-    And in gamestate_integration_arduinotrack.cfg, line 3:
-    ```cfg
-    "uri" "http://127.0.0.1:3000"
-    ```
-
-1.  Can i gather others informations than the ones proposed?
-
-    Yes, you can. The out.txt is an example of the payload which is storing all the informations from CS:GO. For more information, you can follow this [guide](https://github.com/tsuriga/csgo-gsi-qsguide) and [the official wiki about CS:GO GSI](https://developer.valvesoftware.com/wiki/Counter-Strike:_Global_Offensive_Game_State_Integration).
+8. Play some CSGO and enjoy!

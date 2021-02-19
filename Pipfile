@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pyserial = "*"
+qtpy = "*"
+pyqt5 = "*"
+
+[dev-packages]
+pylama = "*"
+black = "*"
+
+[requires]
+python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true
