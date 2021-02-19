@@ -34,12 +34,16 @@ class CsgoWindow(QWidget):
     def __init__(self):
         """Init UI."""
         super(CsgoWindow, self).__init__()
+        # Check ports
+        list_ports_device = sorted(
+            map(lambda x: str(x.name), list_ports.comports())
+        )
+
         # Widgets
         self.server_thread = None
         self.connect_btn = QPushButton("Connect")
 
         self.comcb = QComboBox()
-        list_ports_device = [port.device for port in list_ports.comports()]
         self.comcb.addItems(list_ports_device)
         if not list_ports_device:
             self.connect_btn.setDisabled(True)
@@ -66,36 +70,11 @@ class CsgoWindow(QWidget):
 
         # Icon
         app_icon = QIcon()
-        app_icon.addFile(
-            os.path.join(get_exec_path(), "assets/csgo-16.ico"), QSize(16, 16)
-        )
-        app_icon.addFile(
-            os.path.join(get_exec_path(), "assets/csgo-20.ico"), QSize(20, 20)
-        )
-        app_icon.addFile(
-            os.path.join(get_exec_path(), "assets/csgo-24.ico"), QSize(24, 24)
-        )
-        app_icon.addFile(
-            os.path.join(get_exec_path(), "assets/csgo-32.ico"), QSize(32, 32)
-        )
-        app_icon.addFile(
-            os.path.join(get_exec_path(), "assets/csgo-48.ico"), QSize(48, 48)
-        )
-        app_icon.addFile(
-            os.path.join(get_exec_path(), "assets/csgo-64.ico"), QSize(64, 64)
-        )
-        app_icon.addFile(
-            os.path.join(get_exec_path(), "assets/csgo-128.ico"),
-            QSize(128, 128),
-        )
-        app_icon.addFile(
-            os.path.join(get_exec_path(), "assets/csgo-256.ico"),
-            QSize(256, 256),
-        )
-        app_icon.addFile(
-            os.path.join(get_exec_path(), "assets/csgo-512.ico"),
-            QSize(512, 512),
-        )
+        for i in (16, 20, 24, 32, 48, 64, 128, 256, 512):
+            app_icon.addFile(
+                os.path.join(get_exec_path(), f"assets/csgo-{i}.ico"),
+                QSize(i, i),
+            )
 
         # Window
         self.setWindowIcon(app_icon)
@@ -109,7 +88,9 @@ class CsgoWindow(QWidget):
     def refresh(self):
         """Refresh COM ports."""
         self.comcb.clear()
-        list_ports_device = [port.device for port in list_ports.comports()]
+        list_ports_device = sorted(
+            map(lambda x: str(x.name), list_ports.comports())
+        )
         self.comcb.addItems(list_ports_device)
         if not list_ports_device:
             self.connect_btn.setDisabled(True)

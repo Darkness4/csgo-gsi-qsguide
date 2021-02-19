@@ -16,4 +16,4 @@ def main():
     global w
     app = QApplication(sys.argv)
     w = CsgoWindow()
-    exit(app.exec_())
+    sys.exit(app.exec_())
