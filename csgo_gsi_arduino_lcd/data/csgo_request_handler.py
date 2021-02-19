@@ -1,6 +1,6 @@
+import json
 import logging
 from http.server import BaseHTTPRequestHandler
-from json import loads
 
 from csgo_gsi_arduino_lcd.data.arduino_mediator import ArduinoMediator
 from csgo_gsi_arduino_lcd.debug.payload_viewer_thread import (
@@ -33,7 +33,7 @@ class CsgoRequestHandler(BaseHTTPRequestHandler):
         length = int(self.headers["Content-Length"])
         body = self.rfile.read(length).decode("utf-8")
 
-        self.parse_payload(loads(body))
+        self.parse_payload(json.loads(body))
 
         self.send_header("Content-type", "text/html")
         self.send_response(200)
