@@ -41,8 +41,7 @@ class ServerThread(QThread):
 
     def run(self):
         """Start the server."""
-        handler = partial(
-            CsgoRequestHandler,
+        handler = CsgoRequestHandler.create(
             self.arduino_mediator,
             self.payload_viewer,
         )

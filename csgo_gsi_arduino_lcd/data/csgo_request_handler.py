@@ -1,3 +1,4 @@
+from functools import partial
 import json
 import logging
 from http.server import BaseHTTPRequestHandler
@@ -16,6 +17,18 @@ class CsgoRequestHandler(BaseHTTPRequestHandler):
     is_waiting: bool = False
     payload_viewer: PayloadViewerThread
     arduino: ArduinoMediator
+
+    @classmethod
+    def create(
+        cls,
+        arduino_mediator: ArduinoMediator,
+        payload_viewer: PayloadViewerThread,
+    ):
+        return partial(
+            cls,
+            arduino_mediator,
+            payload_viewer,
+        )
 
     def __init__(
         self,
