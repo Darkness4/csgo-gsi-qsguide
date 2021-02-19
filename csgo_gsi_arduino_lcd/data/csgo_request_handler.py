@@ -1,3 +1,4 @@
+import logging
 from http.server import BaseHTTPRequestHandler
 from json import loads
 
@@ -52,30 +53,31 @@ class CsgoRequestHandler(BaseHTTPRequestHandler):
             Payload containing all CSGO's informations.
 
         """
-        round_phase = payload["round"]["phase"]
+        try:
+            round_phase = payload["round"]["phase"]
 
-        if round_phase is not None:
-            self.is_waiting = False
-            state = State.from_dict(payload["player"]["state"])
-            self.arduino.status = Status.from_bomb_dict(
-                payload["round"]["bomb"]
-            )
-
-            if state != self.arduino.state:  # if the state has changed
-                self.arduino.status = Status.NOT_FREEZETIME
-                # Progress bar HP AM
-                self.arduino.state = state
-
-                self.arduino.status = (
-                    Status.FREEZETIME
-                    if round_phase == "freezetime"
-                    else Status.NOT_FREEZETIME
+            if round_phase is not None:
+                self.is_waiting = False
+                state = State.from_dict(payload["player"]["state"])
+                self.arduino.status = Status.from_bomb_dict(
+                    payload["round"]["bomb"]
                 )
-        elif not self.is_waiting:
-            self.is_waiting = True
-            self.arduino.status = Status.NONE
 
-        # Show payload
-        if payload != self.payload_viewer.payload:
-            self.payload_viewer.payload = payload
-            self.payload_viewer.refresh()
+                if state != self.arduino.state:  # if the state has changed
+                    self.arduino.status = Status.NOT_FREEZETIME
+                    # Progress bar HP AM
+                    self.arduino.state = state
+
+                    self.arduino.status = Status.from_round_phase_dict(
+                        round_phase
+                    )
+            elif not self.is_waiting:
+                self.is_waiting = True
+                self.arduino.status = Status.NONE
+
+            # Show payload
+            if payload != self.payload_viewer.payload:
+                self.payload_viewer.payload = payload
+                self.payload_viewer.refresh()
+        except (KeyError, TypeError):
+            logging.exception("Parsing incorrect")
