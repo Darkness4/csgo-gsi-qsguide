@@ -1,6 +1,5 @@
 from http.server import BaseHTTPRequestHandler
 from json import loads
-from typing import Optional
 
 from csgo_gsi_arduino_lcd.data.arduino_mediator import ArduinoMediator
 from csgo_gsi_arduino_lcd.debug.payload_viewer_thread import (
@@ -57,7 +56,6 @@ class CsgoRequestHandler(BaseHTTPRequestHandler):
 
         if round_phase is not None:
             self.is_waiting = False
-            state: Optional[State] = None
             state = State.from_dict(payload["player"]["state"])
             self.arduino.status = Status.from_bomb_dict(
                 payload["round"]["bomb"]
@@ -68,15 +66,16 @@ class CsgoRequestHandler(BaseHTTPRequestHandler):
                 # Progress bar HP AM
                 self.arduino.state = state
 
-                if round_phase != "freezetime":
-                    self.arduino.status = Status.NOT_FREEZETIME
-                else:  # Not kill streak
-                    self.arduino.status = Status.FREEZETIME
+                self.arduino.status = (
+                    Status.FREEZETIME
+                    if round_phase == "freezetime"
+                    else Status.NOT_FREEZETIME
+                )
         elif not self.is_waiting:
-            self.is_waiting = True  # is_waiting
+            self.is_waiting = True
             self.arduino.status = Status.NONE
 
-        #  Start the payload viewer
+        # Show payload
         if payload != self.payload_viewer.payload:
             self.payload_viewer.payload = payload
             self.payload_viewer.refresh()

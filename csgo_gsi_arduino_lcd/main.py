@@ -13,6 +13,7 @@ from csgo_gsi_arduino_lcd.ui.csgo_window import CsgoWindow
 
 
 def main():
+    global w
     app = QApplication(sys.argv)
     w = CsgoWindow()
     exit(app.exec_())

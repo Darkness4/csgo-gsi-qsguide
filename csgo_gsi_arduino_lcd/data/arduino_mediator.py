@@ -111,12 +111,11 @@ class ArduinoMediator(Thread):
         """Show kills in one line."""
         # HS and Kill counter
         self.ser_arduino.write(b"K: ")
-        for _ in range(
-            self.state.round_kills - self.state.round_killhs
-        ):  # counting
-            self.ser_arduino.write(b"\x00")  # Byte 0 char : kill no HS
-        for _ in range(self.state.round_killhs):  # counting
-            self.ser_arduino.write(b"\x01")  # Byte 1 char : HS
+        for i in range(self.state.round_kills):
+            if i < self.state.round_killhs:
+                self.ser_arduino.write(b"\x01")  # Byte 1 char : HS
+            else:
+                self.ser_arduino.write(b"\x00")  # Byte 0 char : kill no HS
 
     def draw_money(self):
         """Show money in one line."""

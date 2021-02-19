@@ -34,10 +34,10 @@ class ServerThread(QThread):
         self.ser_arduino = Serial(self.com_str, 9600)
         logging.info("Arduino detected")
 
-        # Launch server
+        # Launch mediator
         self.arduino_mediator = ArduinoMediator(self.ser_arduino)
         self.arduino_mediator.start()
-        logging.info("Arduino Meditor started")
+        logging.info("Arduino Mediator started")
 
     def run(self):
         """Start the server."""

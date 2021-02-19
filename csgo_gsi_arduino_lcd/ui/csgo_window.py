@@ -20,7 +20,7 @@ from qtpy.QtWidgets import (
 from serial.tools import list_ports
 
 
-def getExecPath():
+def get_exec_path():
     try:
         sFile = os.path.abspath(sys.modules["__main__"].__file__)
     except Exception:
@@ -41,7 +41,7 @@ class CsgoWindow(QWidget):
         self.comcb = QComboBox()
         list_ports_device = [port.device for port in list_ports.comports()]
         self.comcb.addItems(list_ports_device)
-        if list_ports_device == []:
+        if not list_ports_device:
             self.connect_btn.setDisabled(True)
         else:
             self.connect_btn.setDisabled(False)
@@ -67,33 +67,33 @@ class CsgoWindow(QWidget):
         # Icon
         app_icon = QIcon()
         app_icon.addFile(
-            os.path.join(getExecPath(), "assets/csgo-16.ico"), QSize(16, 16)
+            os.path.join(get_exec_path(), "assets/csgo-16.ico"), QSize(16, 16)
         )
         app_icon.addFile(
-            os.path.join(getExecPath(), "assets/csgo-20.ico"), QSize(20, 20)
+            os.path.join(get_exec_path(), "assets/csgo-20.ico"), QSize(20, 20)
         )
         app_icon.addFile(
-            os.path.join(getExecPath(), "assets/csgo-24.ico"), QSize(24, 24)
+            os.path.join(get_exec_path(), "assets/csgo-24.ico"), QSize(24, 24)
         )
         app_icon.addFile(
-            os.path.join(getExecPath(), "assets/csgo-32.ico"), QSize(32, 32)
+            os.path.join(get_exec_path(), "assets/csgo-32.ico"), QSize(32, 32)
         )
         app_icon.addFile(
-            os.path.join(getExecPath(), "assets/csgo-48.ico"), QSize(48, 48)
+            os.path.join(get_exec_path(), "assets/csgo-48.ico"), QSize(48, 48)
         )
         app_icon.addFile(
-            os.path.join(getExecPath(), "assets/csgo-64.ico"), QSize(64, 64)
+            os.path.join(get_exec_path(), "assets/csgo-64.ico"), QSize(64, 64)
         )
         app_icon.addFile(
-            os.path.join(getExecPath(), "assets/csgo-128.ico"),
+            os.path.join(get_exec_path(), "assets/csgo-128.ico"),
             QSize(128, 128),
         )
         app_icon.addFile(
-            os.path.join(getExecPath(), "assets/csgo-256.ico"),
+            os.path.join(get_exec_path(), "assets/csgo-256.ico"),
             QSize(256, 256),
         )
         app_icon.addFile(
-            os.path.join(getExecPath(), "assets/csgo-512.ico"),
+            os.path.join(get_exec_path(), "assets/csgo-512.ico"),
             QSize(512, 512),
         )
 
@@ -111,7 +111,7 @@ class CsgoWindow(QWidget):
         self.comcb.clear()
         list_ports_device = [port.device for port in list_ports.comports()]
         self.comcb.addItems(list_ports_device)
-        if list_ports_device == []:
+        if not list_ports_device:
             self.connect_btn.setDisabled(True)
         else:
             self.connect_btn.setDisabled(False)
