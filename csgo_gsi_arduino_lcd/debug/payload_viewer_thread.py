@@ -8,7 +8,7 @@ Payload printer.
 import json
 import logging
 from threading import Thread
-from typing import Optional
+from typing import Any, Dict, Optional
 
 
 class PayloadViewerThread(Thread):
@@ -37,7 +37,7 @@ class PayloadViewerThread(Thread):
 
     running = True  # Order to start/stop
     refreshable = False
-    payload: Optional[dict] = None
+    payload: Optional[Dict[str, Any]] = None
     __pause = True
 
     def __init__(self):

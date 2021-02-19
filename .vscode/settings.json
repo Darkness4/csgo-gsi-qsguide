@@ -2,5 +2,6 @@
     "python.linting.pylintEnabled": false,
     "python.linting.pylamaEnabled": true,
     "python.pythonPath": "C:\\Users\\nguye\\.virtualenvs\\csgo-gsi-arduino-lcd-ZH56k7sE\\Scripts\\python.exe",
-    "python.formatting.provider": "black"
+    "python.formatting.provider": "black",
+    "python.analysis.typeCheckingMode": "strict"
 }

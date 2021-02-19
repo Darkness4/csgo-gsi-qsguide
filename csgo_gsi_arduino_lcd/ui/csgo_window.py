@@ -9,7 +9,7 @@ import sys
 
 from csgo_gsi_arduino_lcd.data.server_thread import ServerThread
 from qtpy.QtCore import QSize, Qt, Slot
-from qtpy.QtGui import QIcon
+from qtpy.QtGui import QIcon, QCloseEvent
 from qtpy.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -127,10 +127,11 @@ class CsgoWindow(QWidget):
         self.payload_viewer_btn.setDisabled(True)
 
         # Kill the messenger and server
-        self.server_thread.arduino_mediator.shutdown()
-        self.server_thread.payload_viewer.shutdown()
-        self.server_thread.server.shutdown()
-        self.server_thread = None
+        if self.server_thread is not None:
+            self.server_thread.arduino_mediator.shutdown()
+            self.server_thread.payload_viewer.shutdown()
+            self.server_thread.server.shutdown()
+            self.server_thread = None
 
         # Change button function
         self.connect_btn.clicked.disconnect()
@@ -149,7 +150,8 @@ class CsgoWindow(QWidget):
     def resume_payload_viewer(self):
         """Start Payload Viewer."""
         # Start payload vierwer
-        self.server_thread.payload_viewer.resume()
+        if self.server_thread is not None:
+            self.server_thread.payload_viewer.resume()
 
         # Change button function
         self.payload_viewer_btn.clicked.disconnect()
@@ -160,7 +162,7 @@ class CsgoWindow(QWidget):
     def pause_payload_viewer(self):
         """Stop Payload Viewer."""
         # Stop payload viewer
-        if self.server_thread.payload_viewer is not None:
+        if self.server_thread is not None:
             self.server_thread.payload_viewer.pause()
 
         # Change button function
@@ -168,9 +170,9 @@ class CsgoWindow(QWidget):
         self.payload_viewer_btn.clicked.connect(self.resume_payload_viewer)
         self.payload_viewer_btn.setText("View payload")
 
-    def close_all(self, *args, **kwargs):
+    def close_all(self, event: QCloseEvent):
         """Close everything before closing app."""
-        super(CsgoWindow, self).closeEvent(*args, **kwargs)
+        super(CsgoWindow, self).closeEvent(event)
         if self.server_thread is not None:
             self.server_thread.arduino_mediator.shutdown()
             self.server_thread.payload_viewer.shutdown()

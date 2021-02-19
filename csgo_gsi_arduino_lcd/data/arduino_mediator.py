@@ -111,42 +111,47 @@ class ArduinoMediator(Thread):
         """Show kills in one line."""
         # HS and Kill counter
         self.ser_arduino.write(b"K: ")
-        for i in range(self.state.round_kills):
-            if i < self.state.round_killhs:
-                self.ser_arduino.write(b"\x01")  # Byte 1 char : HS
-            else:
-                self.ser_arduino.write(b"\x00")  # Byte 0 char : kill no HS
+        if self.state is not None:
+            for i in range(self.state.round_kills):
+                if i < self.state.round_killhs:
+                    self.ser_arduino.write(b"\x01")  # Byte 1 char : HS
+                else:
+                    self.ser_arduino.write(b"\x00")  # Byte 0 char : kill no HS
 
     def draw_money(self):
         """Show money in one line."""
-        self.ser_arduino.write(f"M: {self.state.money}".encode())
+        if self.state is not None:
+            self.ser_arduino.write(f"M: {self.state.money}".encode())
 
     def draw_health_and_armor(self):
         """Show health and armor in one line."""
-        self.ser_arduino.write(b"H: ")
-        self.ser_arduino.write(
-            ArduinoMediator.progress(self.state.health // 5)
-        )
-        self.ser_arduino.write(
-            ArduinoMediator.progress((self.state.health - 25) // 5)
-        )
-        self.ser_arduino.write(
-            ArduinoMediator.progress((self.state.health - 50) // 5)
-        )
-        self.ser_arduino.write(
-            ArduinoMediator.progress((self.state.health - 75) // 5)
-        )
-        self.ser_arduino.write(b" A: ")
-        self.ser_arduino.write(ArduinoMediator.progress(self.state.armor // 5))
-        self.ser_arduino.write(
-            ArduinoMediator.progress((self.state.armor - 25) // 5)
-        )
-        self.ser_arduino.write(
-            ArduinoMediator.progress((self.state.armor - 50) // 5)
-        )
-        self.ser_arduino.write(
-            ArduinoMediator.progress((self.state.armor - 75) // 5)
-        )
+        if self.state is not None:
+            self.ser_arduino.write(b"H: ")
+            self.ser_arduino.write(
+                ArduinoMediator.progress(self.state.health // 5)
+            )
+            self.ser_arduino.write(
+                ArduinoMediator.progress((self.state.health - 25) // 5)
+            )
+            self.ser_arduino.write(
+                ArduinoMediator.progress((self.state.health - 50) // 5)
+            )
+            self.ser_arduino.write(
+                ArduinoMediator.progress((self.state.health - 75) // 5)
+            )
+            self.ser_arduino.write(b" A: ")
+            self.ser_arduino.write(
+                ArduinoMediator.progress(self.state.armor // 5)
+            )
+            self.ser_arduino.write(
+                ArduinoMediator.progress((self.state.armor - 25) // 5)
+            )
+            self.ser_arduino.write(
+                ArduinoMediator.progress((self.state.armor - 50) // 5)
+            )
+            self.ser_arduino.write(
+                ArduinoMediator.progress((self.state.armor - 75) // 5)
+            )
 
     def draw_idling(self):
         """Print text while idling."""

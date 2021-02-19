@@ -1,7 +1,9 @@
-from functools import partial
 import json
 import logging
+import socketserver
+from functools import partial
 from http.server import BaseHTTPRequestHandler
+from typing import Any, Dict, Tuple
 
 from csgo_gsi_arduino_lcd.data.arduino_mediator import ArduinoMediator
 from csgo_gsi_arduino_lcd.debug.payload_viewer_thread import (
@@ -34,10 +36,13 @@ class CsgoRequestHandler(BaseHTTPRequestHandler):
         self,
         arduino_mediator: ArduinoMediator,
         payload_viewer: PayloadViewerThread,
-        *args,
-        **kwargs
+        request: bytes,
+        client_address: Tuple[str, int],
+        server: socketserver.BaseServer,
     ):
-        super(CsgoRequestHandler, self).__init__(*args, **kwargs)
+        super(CsgoRequestHandler, self).__init__(
+            request, client_address, server
+        )
         self.arduino = arduino_mediator
         self.payload_viewer = payload_viewer
 
@@ -55,7 +60,7 @@ class CsgoRequestHandler(BaseHTTPRequestHandler):
     # Parsing and actions
     def parse_payload(
         self,
-        payload: dict,
+        payload: Dict[str, Any],
     ):
         """
         Search payload and execute arduino's codes.

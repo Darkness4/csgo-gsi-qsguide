@@ -6,9 +6,7 @@ Server Thread.
 """
 
 import logging
-from functools import partial
-from http.server import ThreadingHTTPServer
-from typing import Optional
+from http.server import HTTPServer
 
 from csgo_gsi_arduino_lcd.data.arduino_mediator import ArduinoMediator
 from csgo_gsi_arduino_lcd.data.csgo_request_handler import CsgoRequestHandler
@@ -24,7 +22,7 @@ class ServerThread(QThread):
 
     payload_viewer = PayloadViewerThread()
     arduino_mediator: ArduinoMediator
-    server: Optional[ThreadingHTTPServer] = None
+    server: HTTPServer
     ser_arduino: Serial
 
     def __init__(self, com_str: str):
@@ -39,16 +37,16 @@ class ServerThread(QThread):
         self.arduino_mediator.start()
         logging.info("Arduino Mediator started")
 
-    def run(self):
-        """Start the server."""
         handler = CsgoRequestHandler.create(
             self.arduino_mediator,
             self.payload_viewer,
         )
-        with ThreadingHTTPServer(("localhost", 3000), handler) as server:
-            self.server = server
-            logging.info("CS:GO GSI Quick Start server starting")
-            server.serve_forever()
+        self.server = HTTPServer(("localhost", 3000), handler)
+
+    def run(self):
+        """Start the server."""
+        logging.info("CS:GO GSI Quick Start server starting")
+        self.server.serve_forever()
         logging.info("CS:GO GSI Quick Start server stopped")
         self.ser_arduino.close()
         logging.info("Serial stopped")
