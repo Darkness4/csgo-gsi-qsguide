@@ -9,15 +9,11 @@ import sys
 from typing import Optional
 
 from csgo_gsi_arduino_lcd.data.server_thread import ServerThread
+from csgo_gsi_arduino_lcd.ui.payload_dialog import PayloadDialog
 from qtpy.QtCore import QSize, Qt, Slot
-from qtpy.QtGui import QIcon, QCloseEvent
-from qtpy.QtWidgets import (
-    QComboBox,
-    QHBoxLayout,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
+from qtpy.QtGui import QCloseEvent, QIcon
+from qtpy.QtWidgets import (QComboBox, QHBoxLayout, QPushButton, QVBoxLayout,
+                            QWidget)
 from serial.tools import list_ports
 
 
@@ -35,10 +31,24 @@ class CsgoWindow(QWidget):
     refresh_btn: QPushButton
     payload_viewer_btn: QPushButton
     comcb: QComboBox
+    payload_dialog: PayloadDialog
 
     def __init__(self):
         """Init UI."""
         super(CsgoWindow, self).__init__()
+        # Icon
+        app_icon = QIcon()
+        for i in (16, 20, 24, 32, 48, 64, 128, 256, 512):
+            app_icon.addFile(
+                resource_path(f"assets/csgo-{i}.ico"),
+                QSize(i, i),
+            )
+
+        # Window
+        self.setWindowIcon(app_icon)
+        self.setWindowTitle("CSGO GSI on LCD")
+        self.setWindowFlags(Qt.WindowCloseButtonHint)
+
         # Check ports
         list_ports_device = sorted(
             map(lambda x: str(x.name), list_ports.comports())
@@ -58,8 +68,10 @@ class CsgoWindow(QWidget):
         self.refresh_btn.resize(self.refresh_btn.sizeHint())
         self.refresh_btn.clicked.connect(self.refresh)
 
+        # Payload Viewer
         self.payload_viewer_btn = QPushButton("View payload")
-        self.payload_viewer_btn.setDisabled(True)
+        self.payload_viewer_btn.clicked.connect(self.show_last_data)
+        self.payload_dialog = PayloadDialog(app_icon)
 
         # Container
         vbox = QVBoxLayout()
@@ -72,21 +84,16 @@ class CsgoWindow(QWidget):
         vbox.addWidget(self.connect_btn)
         self.setLayout(vbox)
 
-        # Icon
-        app_icon = QIcon()
-        for i in (16, 20, 24, 32, 48, 64, 128, 256, 512):
-            app_icon.addFile(
-                resource_path(f"assets/csgo-{i}.ico"),
-                QSize(i, i),
-            )
-
-        # Window
-        self.setWindowIcon(app_icon)
-        self.setWindowTitle("CSGO GSI on LCD")
-        self.setWindowFlags(Qt.WindowCloseButtonHint)
-
         self.show()
         self.setFixedSize(self.size())
+
+    @Slot()
+    def show_last_data(self):
+        data = None
+        if self.server_thread is not None:
+            data = self.server_thread.data_store.data
+        self.payload_dialog.update_text(data)
+        self.payload_dialog.show()
 
     @Slot()
     def refresh(self):
@@ -102,7 +109,7 @@ class CsgoWindow(QWidget):
             self.connect_btn.setDisabled(False)
 
     @Slot()
-    def connect(self):
+    def start_server(self):
         """Connect to the server."""
         # Disable buttons
         self.comcb.setDisabled(True)
@@ -120,65 +127,29 @@ class CsgoWindow(QWidget):
         self.connect_btn.setDisabled(False)
         self.connect_btn.setText("Stop")
 
-        # Enable payload_viewer
-        self.payload_viewer_btn.clicked.connect(self.resume_payload_viewer)
-        self.payload_viewer_btn.setDisabled(False)
-
     @Slot()
     def stop_server(self):
         """Stop the server."""
-        # Disable buttons
-        self.payload_viewer_btn.setDisabled(True)
-
         # Kill the messenger and server
         if self.server_thread is not None:
             self.server_thread.arduino_mediator.shutdown()
-            self.server_thread.payload_viewer.shutdown()
             self.server_thread.server.shutdown()
             self.server_thread = None
 
         # Change button function
         self.connect_btn.clicked.disconnect()
-        self.connect_btn.clicked.connect(self.connect)
+        self.connect_btn.clicked.connect(self.start_server)
         self.connect_btn.setText("Connect")
-        self.payload_viewer_btn.clicked.disconnect()
-        self.payload_viewer_btn.clicked.connect(self.resume_payload_viewer)
-        self.payload_viewer_btn.setText("View payload")
 
         # Enable buttons
         self.comcb.setDisabled(False)
         self.connect_btn.setDisabled(False)
         self.refresh_btn.setDisabled(False)
 
-    @Slot()
-    def resume_payload_viewer(self):
-        """Start Payload Viewer."""
-        # Start payload vierwer
-        if self.server_thread is not None:
-            self.server_thread.payload_viewer.resume()
-
-        # Change button function
-        self.payload_viewer_btn.clicked.disconnect()
-        self.payload_viewer_btn.clicked.connect(self.pause_payload_viewer)
-        self.payload_viewer_btn.setText("Hide payload")
-
-    @Slot()
-    def pause_payload_viewer(self):
-        """Stop Payload Viewer."""
-        # Stop payload viewer
-        if self.server_thread is not None:
-            self.server_thread.payload_viewer.pause()
-
-        # Change button function
-        self.payload_viewer_btn.clicked.disconnect()
-        self.payload_viewer_btn.clicked.connect(self.resume_payload_viewer)
-        self.payload_viewer_btn.setText("View payload")
-
     def close_all(self, event: QCloseEvent):
         """Close everything before closing app."""
         super(CsgoWindow, self).closeEvent(event)
         if self.server_thread is not None:
             self.server_thread.arduino_mediator.shutdown()
-            self.server_thread.payload_viewer.shutdown()
             self.server_thread.server.shutdown()
             self.server_thread = None

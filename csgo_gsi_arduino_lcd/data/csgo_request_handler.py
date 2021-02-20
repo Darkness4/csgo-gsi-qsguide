@@ -3,12 +3,10 @@ import logging
 import socketserver
 from functools import partial
 from http.server import BaseHTTPRequestHandler
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from csgo_gsi_arduino_lcd.data.arduino_mediator import ArduinoMediator
-from csgo_gsi_arduino_lcd.debug.payload_viewer_thread import (
-    PayloadViewerThread,
-)
+from csgo_gsi_arduino_lcd.data.data_store import DataStore
 from csgo_gsi_arduino_lcd.entities.state import State
 from csgo_gsi_arduino_lcd.entities.status import Status
 
@@ -17,25 +15,17 @@ class CsgoRequestHandler(BaseHTTPRequestHandler):
     """CSGO's requests handler."""
 
     is_waiting: bool = False
-    payload_viewer: PayloadViewerThread
     arduino: ArduinoMediator
+    data_store: DataStore
+    last_data: Optional[Dict[str, Any]] = None
 
     @classmethod
-    def create(
-        cls,
-        arduino_mediator: ArduinoMediator,
-        payload_viewer: PayloadViewerThread,
-    ):
-        return partial(
-            cls,
-            arduino_mediator,
-            payload_viewer,
-        )
+    def create(cls, arduino_mediator: ArduinoMediator, data_store: DataStore):
+        return partial(cls, arduino_mediator, data_store)
 
     def __init__(
         self,
         arduino_mediator: ArduinoMediator,
-        payload_viewer: PayloadViewerThread,
         request: bytes,
         client_address: Tuple[str, int],
         server: socketserver.BaseServer,
@@ -44,14 +34,15 @@ class CsgoRequestHandler(BaseHTTPRequestHandler):
             request, client_address, server
         )
         self.arduino = arduino_mediator
-        self.payload_viewer = payload_viewer
 
     def do_POST(self):
         """Receive CSGO's informations."""
         length = int(self.headers["Content-Length"])
         body = self.rfile.read(length).decode("utf-8")
 
-        self.parse_payload(json.loads(body))
+        data = json.loads(body)
+        self.parse_payload(data)
+        self.data_store.data = data
 
         self.send_header("Content-type", "text/html")
         self.send_response(200)
@@ -92,10 +83,5 @@ class CsgoRequestHandler(BaseHTTPRequestHandler):
             elif not self.is_waiting:
                 self.is_waiting = True
                 self.arduino.status = Status.NONE
-
-            # Show payload
-            if payload != self.payload_viewer.payload:
-                self.payload_viewer.payload = payload
-                self.payload_viewer.refresh()
         except (KeyError, TypeError):
             logging.exception("Parsing incorrect")
