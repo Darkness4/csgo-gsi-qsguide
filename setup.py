@@ -22,7 +22,7 @@ setup(
     scripts=scripts,
     package_data={"assets": ["*"]},
     install_requires=[
-        "PyQt5",
+        "PySide2",
         "pyserial",
         "QtPy",
     ],

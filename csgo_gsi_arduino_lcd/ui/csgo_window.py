@@ -6,6 +6,7 @@ User interface.
 """
 import os
 import sys
+from typing import Optional
 
 from csgo_gsi_arduino_lcd.data.server_thread import ServerThread
 from qtpy.QtCore import QSize, Qt, Slot
@@ -29,6 +30,12 @@ def resource_path(relative_path: str):
 class CsgoWindow(QWidget):
     """App UI."""
 
+    server_thread: Optional[ServerThread] = None
+    connect_btn: QPushButton
+    refresh_btn: QPushButton
+    payload_viewer_btn: QPushButton
+    comcb: QComboBox
+
     def __init__(self):
         """Init UI."""
         super(CsgoWindow, self).__init__()
@@ -38,7 +45,6 @@ class CsgoWindow(QWidget):
         )
 
         # Widgets
-        self.server_thread = None
         self.connect_btn = QPushButton("Connect")
 
         self.comcb = QComboBox()

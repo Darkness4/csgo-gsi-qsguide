@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 pyserial = "*"
 qtpy = "*"
-pyqt5 = "*"
+pyside2 = "*"
 
 [dev-packages]
 pylama = "*"

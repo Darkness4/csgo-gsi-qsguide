@@ -49,7 +49,7 @@ class PayloadViewerThread(Thread):
         while self.running:
             if not self.__pause:
                 if self.refreshable:
-                    logging.debug(json.dumps(self.payload, indent=4))
+                    logging.debug(json.dumps(self.payload, indent=2))
                     self.refreshable = False
 
     def shutdown(self):
